@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html
+	xmlns="http://www.w3.org/1999/xhtml" 
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.thymeleaf.org">
+<head>
+<title>Payments tool</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<link rel="stylesheet" type="text/css"
+	href="webjars/bootstrap/4.1.0/css/bootstrap.min.css" />
+<link rel="stylesheet" type="text/css"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+<link rel="stylesheet"
+	href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+<link rel="stylesheet" th:href="@{/css/main.css}" />
+</head>
+
+<body>
+	<div layout:fragment="navigation"></div>
+	<div layout:fragment="content"></div>
+
+	<footer layout:fragment="footer">
+		<div class="container text-right">
+			<hr />
+			<span class="text-muted">&copy; 2018 - Powered by e-Travel
+				Payment Service</span>
+		</div>
+	</footer>
+
+	<div layout:fragment="scripts"></div>
+</body>
+
+</html>

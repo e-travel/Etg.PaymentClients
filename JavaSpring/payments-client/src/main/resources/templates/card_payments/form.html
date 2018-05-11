@@ -1,0 +1,239 @@
+<form role="form" name="payments_creation_form"
+	id="payments_creation_form" action="">
+	<div class="row">
+		<div class="col-sm-6">
+			<div class="form-group">
+				<label for="merchantref">Merchant reference</label> <input
+					type="text" class="form-control" name="merchantref"
+					id="merchantref" placeholder="Flights_PNR_Ticket_">
+			</div>
+		</div>
+		<div class="col-sm-6">
+			<div class="form-group">
+				<label for="orderid">Order id</label> <input type="text"
+					class="form-control" name="orderid" id="orderid" placeholder="">
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-4">
+			<div class="form-group">
+				<label for="brand">Brand</label> <input type="text"
+					class="form-control" name="brand" id="brand" placeholder="">
+			</div>
+		</div>
+		<div class="col-sm-4">
+			<div class="form-group">
+				<label for="country">Country (2-letter ISO Code)</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-globe"></i></span>
+					</div>
+					<input type="text" class="form-control" name="country" id="country"
+						placeholder="">
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-4">
+			<div class="form-group">
+				<label for="language">Language (2-letter ISO Code)</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-language"></i></span>
+					</div>
+					<input type="text" class="form-control" name="language"
+						id="language" placeholder="">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-8">
+			<div class="form-group">
+				<label for="amount">Amount (in lowest denominator)</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-money"></i></span>
+					</div>
+					<input type="text" class="form-control" name="amount" id="amount"
+						placeholder="">
+				</div>
+			</div>
+		</div>
+
+		<div class="col-sm-4">
+			<div class="form-group">
+				<label for="currency">Currency</label> <select name="currency"
+					id="currency" class="form-control">
+					<option value="AED">United Arab Emirates Dirham (د.إ)</option>
+					<option value="ALL">Albanian Lek (L)</option>
+					<option value="AUD">Australian Dollar ($)</option>
+					<option value="BGN">Bulgarian Lev (лв.)</option>
+					<option value="BRL">Brazilian Real (R$)</option>
+					<option value="CAD">Canadian Dollar ($)</option>
+					<option value="CHF">Swiss Franc (Fr)</option>
+					<option value="CNY">Chinese Renminbi (¥)</option>
+					<option value="CZK">Czech Koruna (Kč)</option>
+					<option value="DKK">Danish Krone (kr.)</option>
+					<option value="EGP">Egyptian Pound (ج.م)</option>
+					<option value="EUR" selected="selected">Euro (€)</option>
+					<option value="GBP">British Pound (£)</option>
+					<option value="HKD">Hong Kong Dollar ($)</option>
+					<option value="HRK">Croatian Kuna (kn)</option>
+					<option value="HUF">Hungarian Forint (Ft)</option>
+					<option value="IDR">Indonesian Rupiah (Rp)</option>
+					<option value="ILS">Israeli New Sheqel (₪)</option>
+					<option value="INR">Indian Rupee (₹)</option>
+					<option value="JPY">Japanese Yen (¥)</option>
+					<option value="KRW">South Korean Won (₩)</option>
+					<option value="KWD">Kuwaiti Dinar (د.ك)</option>
+					<option value="KZT">Kazakhstani Tenge (〒)</option>
+					<option value="MXN">Mexican Peso ($)</option>
+					<option value="MYR">Malaysian Ringgit (RM)</option>
+					<option value="NOK">Norwegian Krone (kr)</option>
+					<option value="NZD">New Zealand Dollar ($)</option>
+					<option value="PHP">Philippine Peso (₱)</option>
+					<option value="PLN">Polish Zloty (zł)</option>
+					<option value="RON">Romanian Leu (lei)</option>
+					<option value="RSD">Serbian Dinar (РСД)</option>
+					<option value="RUB">Russian Ruble (руб)</option>
+					<option value="SAR">Saudi Riyal (ر.س)</option>
+					<option value="SEK">Swedish Krona (kr)</option>
+					<option value="SGD">Singapore Dollar ($)</option>
+					<option value="THB">Thai Baht (฿)</option>
+					<option value="TRY">Turkish Lira (TL)</option>
+					<option value="TWD">New Taiwan Dollar ($)</option>
+					<option value="UAH">Ukrainian Hryvnia (₴)</option>
+					<option value="USD">US Dollar ($)</option>
+					<option value="ZAR">South African Rand (R)</option>
+				</select>
+			</div>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="col-sm-6">
+			<div class="form-group">
+				<label for="cardholder">Full name (on the card)</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-user"></i></span>
+					</div>
+					<input type="text" class="form-control" name="cardholder"
+						id="cardholder" placeholder="">
+				</div>
+			</div>	
+		</div>
+		
+		<div class="col-sm-6">
+			<div class="form-group">
+				<label for="email">Email</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-at"></i></span>
+					</div>
+					<input type="text" class="form-control" name="email"
+						id="email" placeholder="">
+				</div>
+			</div>	
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-8">
+			<div class="form-group">
+				<label for="pan">Card number</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fa fa-credit-card"></i></span>
+					</div>
+					<input type="text" class="form-control" name="pan" id="pan"
+						placeholder="">
+				</div>
+			</div>
+		</div>
+
+		<div class="col-sm-4">
+			<div class="form-group">
+				<label for="cctype">Card type</label> <select name="cctype"
+					id="cctype" class="form-control">
+					<option value="">-- Select card type--</option>
+					<option value="American Express">American Express</option>
+					<option value="Diners Club">Diners Club</option>
+					<option value="Discover">Discover</option>
+					<option value="Maestro">Maestro</option>
+					<option value="MasterCard">MasterCard</option>
+					<option value="MasterCard Debit">MasterCard Debit</option>
+					<option value="Visa">Visa</option>
+					<option value="Visa Debit">Visa Debit</option>
+					<option value="Visa Electron">Visa Electron</option>
+				</select>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-2">
+			<div class="form-group">
+				<label for="expiration_month">Expiration Month</label> <select
+					name="expiration_month" id="expiration_month" class="form-control">
+					<option value="01">01</option>
+					<option value="02">02</option>
+					<option value="03">03</option>
+					<option value="04">04</option>
+					<option value="05">05</option>
+					<option value="06">06</option>
+					<option value="07">07</option>
+					<option value="08">08</option>
+					<option value="09">09</option>
+					<option value="10">10</option>
+					<option value="11">11</option>
+					<option value="12">12</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="col-sm-2">
+			<div class="form-group">
+				<label for="expiration_year">Expiration Year</label> <select
+					name="expiration_year" id="expiration_year" class="form-control">
+					<option th:each="i : ${#numbers.sequence(2018, 2030)}"
+						th:value="${i}" th:text="${i}"></option>
+				</select>
+			</div>
+		</div>
+
+		<div class="col-sm-2">
+			<div class="form-group">
+				<label for="cvv2">CVV2</label> <input class="form-control"
+					type="text" name="cvv2" id="cvv2">
+			</div>
+		</div>
+		<div class="col-sm-6">
+			<label for="issuer_bank">Issuer Bank</label> <input
+				class="form-control" type="text" name="issuer_bank" id="issuer_bank">
+		</div>
+	</div>
+
+
+	<div class="container">
+		<hr />
+	</div>
+
+	<div class="row">
+		<div class="col-sm-4">
+			<button class="subscribe btn btn-primary btn-block" type="submit">
+				Create a payment token &gt;</button>
+		</div>
+		<div class="offset-sm-2 col-sm-3">
+			<button class="subscribe btn btn-info btn-block"
+				id="generate_fake_data" type="button">Generate fake data</button>
+		</div>
+		<div class="col-sm-3">
+			<button class="subscribe btn btn-clear btn-block" type="reset">
+				Clear Form</button>
+		</div>
+	</div>
+</form>
