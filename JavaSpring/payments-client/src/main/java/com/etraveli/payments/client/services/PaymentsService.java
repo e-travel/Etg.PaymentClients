@@ -174,7 +174,7 @@ public class PaymentsService {
 			
 			return new EnrollmentCheckResponseWrapperDto(true, enrollmentCheckResponseEntity.getBody());
 		} catch (HttpClientErrorException httpClientErrorException) {
-			logger.error("Enrollemnt check request failed with: "
+			logger.error("Enrollment check request failed with: "
 					+ httpClientErrorException.getRawStatusCode() + " " + httpClientErrorException.getStatusText());
 			logger.error(httpClientErrorException.toString());
 			

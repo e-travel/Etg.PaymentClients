@@ -4,6 +4,7 @@
 		var page = {
 			initialize : function() {
 				$(".card-content:not(#card1)").hide();
+				$(".card-link[data-card=card4]").hide();
 				this.addEventListeners();
 			},
 
@@ -15,6 +16,18 @@
 						this.onGenerateFakeDataClick);
 				$("#proceed_to_payment").on("click",
 						this.onProceedToPaymentClick);
+				$("#authenticationMode").on("change",
+						this.onAuthenticationModeChange);
+			},
+			
+			onAuthenticationModeChange: function (evt) {
+				var $this = $(this);
+				
+				if ($this.val() == "AuthenticationNotApplicable") {
+					$(".card-link[data-card=card4]").hide();
+				} else {
+					$(".card-link[data-card=card4]").show();
+				}
 			},
 
 			onGenerateFakeDataClick: function(evt) {

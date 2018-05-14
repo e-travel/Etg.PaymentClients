@@ -13,6 +13,7 @@ public class PaymentRequestDto {
 	private String orderId;
 	private String country;
 	private String email;
+	private String AuthenticationMode;
 	private CardTokenResponseDto token;
 
 	@JsonProperty("amount")
@@ -65,6 +66,11 @@ public class PaymentRequestDto {
 		return email;
 	}
 
+	@JsonProperty("authenticationMode")
+	public String getAuthenticationMode() {
+		return AuthenticationMode;
+	}
+
 	public void setAmount(int amount) {
 		this.amount = amount;
 	}
@@ -103,5 +109,9 @@ public class PaymentRequestDto {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public void setAuthenticationMode(String authenticationMode) {
+		AuthenticationMode = authenticationMode;
 	}
 }

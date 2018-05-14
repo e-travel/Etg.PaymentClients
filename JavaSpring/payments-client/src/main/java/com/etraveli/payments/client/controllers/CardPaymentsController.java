@@ -7,7 +7,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class CardPaymentsController {
-
 	@RequestMapping(method = RequestMethod.GET, path = { "/", "/card_payments" }, name = "index")
 	public ModelAndView index() {
 		return new ModelAndView("card_payments/index", "cardInfo", new Object());

@@ -21,6 +21,7 @@ import com.etraveli.payments.client.dto.integration.AuthenticationModes;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingRequestDto;
 import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingResponseDto;
+import com.etraveli.payments.client.factories.ChargeRequestDtoFactory;
 import com.etraveli.payments.client.services.PaymentsService;
 
 @RestController
@@ -59,21 +60,11 @@ public class PaymentsController {
 		simplePaymentsRoutingRequest.setTransactionValue(paymentRequestDto.getAmount());
 		
 		SimplePaymentsRoutingResponseDto simplePaymentsRoutingResponseDto = paymentsService
-				.performSimpleRouting(simplePaymentsRoutingRequest)
+				.performSimpleRouting(simplePaymentsRoutingRequest) 
 				.getSimplePaymentsRoutingResponseDto();
 		
-		ChargeRequestDto chargeRequest = new ChargeRequestDto();
-		
-		chargeRequest.setAmountInCents(paymentRequestDto.getAmount());
-		chargeRequest.setAuthenticationMode(AuthenticationModes.AuthenticationNotApplicable);
-		chargeRequest.setCardToken(paymentRequestDto.getToken().getToken());
+		ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequestDto);
 		chargeRequest.setClientIp(request.getRemoteAddr());
-		chargeRequest.setCurrency(paymentRequestDto.getCurrency());
-		chargeRequest.setDomain(paymentRequestDto.getBrand());
-		chargeRequest.setLocalizationCountryIsoCode(paymentRequestDto.getCountry());
-		chargeRequest.setLocalizationLanguageIsoCode(paymentRequestDto.getLanguage());
-		chargeRequest.setMerchantReference(paymentRequestDto.getMerchantReference());
-		chargeRequest.setCustomerEmail(paymentRequestDto.getEmail());
 		
 		PaymentResponseDto paymentResponse = new PaymentResponseDto();
 		paymentResponse.setChargeRequest(chargeRequest);
