@@ -5,18 +5,18 @@ import com.etraveli.payments.client.dto.integration.AuthenticationModes;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 
 public final class ChargeRequestDtoFactory {
-	public static ChargeRequestDto getChargeRequest(PaymentRequestDto paymentRequestDto) {
+	public static ChargeRequestDto getChargeRequest(PaymentRequestDto paymentRequest) {
 		ChargeRequestDto chargeRequest = new ChargeRequestDto();
 		
-		chargeRequest.setAmountInCents(paymentRequestDto.getAmount());
-		chargeRequest.setAuthenticationMode(paymentRequestDto.getAuthenticationMode());
-		chargeRequest.setCardToken(paymentRequestDto.getToken().getToken());
-		chargeRequest.setCurrency(paymentRequestDto.getCurrency());
-		chargeRequest.setDomain(paymentRequestDto.getBrand());
-		chargeRequest.setLocalizationCountryIsoCode(paymentRequestDto.getCountry());
-		chargeRequest.setLocalizationLanguageIsoCode(paymentRequestDto.getLanguage());
-		chargeRequest.setMerchantReference(paymentRequestDto.getMerchantReference());
-		chargeRequest.setCustomerEmail(paymentRequestDto.getEmail());
+		chargeRequest.setAmountInCents(paymentRequest.getAmount());
+		chargeRequest.setAuthenticationMode(paymentRequest.getAuthenticationMode());
+		chargeRequest.setCardToken(paymentRequest.getToken().getToken());
+		chargeRequest.setCurrency(paymentRequest.getCurrency());
+		chargeRequest.setDomain(paymentRequest.getBrand());
+		chargeRequest.setLocalizationCountryIsoCode(paymentRequest.getCountry());
+		chargeRequest.setLocalizationLanguageIsoCode(paymentRequest.getLanguage());
+		chargeRequest.setMerchantReference(paymentRequest.getMerchantReference());
+		chargeRequest.setCustomerEmail(paymentRequest.getEmail());
 		
 		return chargeRequest;
 	}

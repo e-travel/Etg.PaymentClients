@@ -126,9 +126,7 @@ public class PaymentsService {
 	}
 
 	public ChargeResponseWrapperDto performCharge(ChargeRequestDto chargeRequest) {
-		String clientRequestId = UUID.randomUUID().toString();
-		logger.debug("Client request id:" + clientRequestId);
-		chargeRequest.setClientRequestId(clientRequestId);
+		logger.debug("Client request id for charge:" + chargeRequest.getClientRequestId());
 
 		ChargeResponseWrapperDto response;
 
@@ -140,8 +138,9 @@ public class PaymentsService {
 					ChargeResponseDto.class);
 			
 			if (chargeResponseEntity.getStatusCode() != HttpStatus.CREATED) {
-				logger.debug("Received HTTP status: " + chargeResponseEntity.getStatusCodeValue() + " "
-						+ chargeResponseEntity.getStatusCode().toString());
+				logger.debug("Received HTTP status: " + chargeResponseEntity.getStatusCodeValue() 
+			       + " " + chargeResponseEntity.getStatusCode().toString());
+				
 				response = new ChargeResponseWrapperDto(false, null);
 			} else {
 				logger.debug("Received HTTP status 201 CREATED...");
@@ -153,11 +152,11 @@ public class PaymentsService {
 
 			if (httpClientErrorException.getRawStatusCode() == 502) {
 				logger.debug("Received HTTP status 502 BAD_GATEWAY...");
-				reverse(clientRequestId);
+				reverse(chargeRequest.getClientRequestId());
 				logger.debug("Enqueued reversal");
 			} else {
-				logger.debug("Received HTTP status: " + httpClientErrorException.getRawStatusCode() + " "
-						+ httpClientErrorException.getStatusText());
+				logger.debug("Received HTTP status: " + httpClientErrorException.getRawStatusCode() 
+					+ " " + httpClientErrorException.getStatusText());
 			}
 		}
 

@@ -3,6 +3,7 @@ package com.etraveli.payments.client.controllers.rest;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,6 +26,7 @@ import com.etraveli.payments.client.dto.integration.EnrollmentCheckResponseDto;
 import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingRequestDto;
 import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingResponseDto;
 import com.etraveli.payments.client.factories.ChargeRequestDtoFactory;
+import com.etraveli.payments.client.factories.EnrollmentCheckRequestDtoFactory;
 import com.etraveli.payments.client.services.PaymentsService;
 
 @RestController
@@ -66,8 +68,14 @@ public class PaymentsController {
 				.performSimpleRouting(simplePaymentsRoutingRequest) 
 				.getSimplePaymentsRoutingResponseDto();
 		
+		String clientIp = request.getRemoteAddr();
+		
 		ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequestDto);
-		chargeRequest.setClientIp(request.getRemoteAddr());
+		chargeRequest.setClientIp(clientIp);
+		
+		EnrollmentCheckRequestDto enrollmentCheckRequest = 
+				EnrollmentCheckRequestDtoFactory.getEnrollmentCheckRequest(paymentRequestDto);
+		enrollmentCheckRequest.setClientIp(clientIp);
 		
 		PaymentResponseDto paymentResponse = new PaymentResponseDto();
 		paymentResponse.setChargeRequest(chargeRequest);
@@ -78,15 +86,17 @@ public class PaymentsController {
 		for(int index = 0; index < totalGateways; index ++) {
 			String gateway = orderedGateways.get(index);
 			
+			EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper;
 			if (paymentRequestDto.getAuthenticationMode() != AuthenticationModes.AuthenticationNotApplicable) {
-				EnrollmentCheckRequestDto enrollmentCheckRequest = new EnrollmentCheckRequestDto();
-				// TODO: Construct enrollment check request here.
-				
-				EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest); 
+				logger.info("Requested card authentication mode: " + paymentRequestDto.getAuthenticationMode()
+					+ ", performing enrollment check.");
+				enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
+				enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest); 
 			}
 			
 			logger.info("Attempting to charge with " + gateway + " (attempt: " + index + " / " + totalGateways + ")");
 			chargeRequest.setGateway(gateway);
+			chargeRequest.setClientRequestId(UUID.randomUUID().toString());
 			
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);
 			
