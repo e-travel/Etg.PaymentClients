@@ -31,6 +31,13 @@
 				
 				$("#products_table tbody").on("mouseover", "tr",
 						this.onProductsTableRowOver);
+				
+				$("#products_table tbody").on("mouseout", 
+						this.onProductsTableOut);
+			},
+			
+			onProductsTableOut: function (evt) {
+				$("#products_table .product-creation-delete").hide();
 			},
 			
 			onProductsTableRowOver: function (evt) {
@@ -116,7 +123,21 @@
 				$("#cvv2").val(
 						(faker.random.number() + 100).toString().substr(0, 3));
 				$("#issuer_bank").val(faker.company.companyName() + " Bank");
-			},
+				
+				var htmlText = "<tr><td>1"
+							 + "</td><td class='product-type'>Flights"  
+							 + "</td><td class='product-id'>" + UUIDv4Generator.generate()
+							 + "</td><td><input type=button class='btn btn-danger btn-block "
+							 + "product-creation-delete btn-sm' value='Delete Item' /></td></tr>";
+	
+				$("#products_table tr").each(function (idx, obj) {
+					if ($(this).is("#product_creation_row")) return;
+					$(this).remove();
+				});
+				
+				$(htmlText).insertAfter("#product_creation_row");
+				$("#products_table .product-creation-delete").hide();
+		},
 
 			onCardLinkClick: function(evt) {
 				var $this = $(this);
