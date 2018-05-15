@@ -15,10 +15,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.etraveli.payments.client.dto.ChargeResponseWrapperDto;
+import com.etraveli.payments.client.dto.EnrollmentCheckResponseWrapperDto;
 import com.etraveli.payments.client.dto.PaymentRequestDto;
 import com.etraveli.payments.client.dto.PaymentResponseDto;
 import com.etraveli.payments.client.dto.integration.AuthenticationModes;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
+import com.etraveli.payments.client.dto.integration.EnrollmentCheckRequestDto;
+import com.etraveli.payments.client.dto.integration.EnrollmentCheckResponseDto;
 import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingRequestDto;
 import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingResponseDto;
 import com.etraveli.payments.client.factories.ChargeRequestDtoFactory;
@@ -71,11 +74,18 @@ public class PaymentsController {
 
 		List<String> orderedGateways = simplePaymentsRoutingResponseDto.getOrderedGateways();
 		
-		int cnt = 0, totalGateways = orderedGateways.size();
-		
-		for(String gateway:orderedGateways) {
-			cnt ++;
-			logger.info("Attempting to charge with " + gateway + " (attempt: " + cnt + " / " + totalGateways + ")");
+		int totalGateways = orderedGateways.size();
+		for(int index = 0; index < totalGateways; index ++) {
+			String gateway = orderedGateways.get(index);
+			
+			if (paymentRequestDto.getAuthenticationMode() != AuthenticationModes.AuthenticationNotApplicable) {
+				EnrollmentCheckRequestDto enrollmentCheckRequest = new EnrollmentCheckRequestDto();
+				// TODO: Construct enrollment check request here.
+				
+				EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest); 
+			}
+			
+			logger.info("Attempting to charge with " + gateway + " (attempt: " + index + " / " + totalGateways + ")");
 			chargeRequest.setGateway(gateway);
 			
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);

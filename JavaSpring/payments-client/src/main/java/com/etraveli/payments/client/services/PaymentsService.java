@@ -89,7 +89,7 @@ public class PaymentsService {
 		} catch (HttpClientErrorException httpClientErrorException) {
 			logger.error("Could not get supported currencies for gateway:" + gateway);
 			response = new SupportedCurrenciesResponseWrapperDto(false, gateway, new ArrayList<>());
-		}
+		} 
 
 		return response;
 	}
