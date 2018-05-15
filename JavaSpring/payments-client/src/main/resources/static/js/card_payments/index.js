@@ -46,8 +46,8 @@
 				var rows = $("#products_table > tbody > tr").length;
 				
 				var htmlText = "<tr><td>" + rows 
-							 + "</td><td>" + $("#product_creation_type").val() 
-							 + "</td><td>" + $("#product_creation_id").val()
+							 + "</td><td class='product-type'>" + $("#product_creation_type").val() 
+							 + "</td><td class='product-id'>" + $("#product_creation_id").val()
 							 + "</td><td><input type=button class='btn btn-danger btn-block "
 							 + "product-creation-delete btn-sm' value='Delete Item' /></td></tr>";
 				
@@ -179,8 +179,18 @@
 			},
 			
 			onProceedToPaymentClick: function (evt) {
+				var products = [];
+				
+				$("#products_table tr").each(function (idx, obj) {
+					if ($(obj).find(".product-type").length == 0) return;
+					products.push({
+						type: $(obj).find(".product-type").text(), 
+						id: $(obj).find(".product-id").text()
+					});
+				});
+				
 				var paymentRequest = window.factories
-					.paymentRequestFactory(page.formDataHash, page.token);
+					.paymentRequestFactory(page.formDataHash, page.token, products);
 				
 				console.log("Sending payment request to back end", paymentRequest);
 				

@@ -1,6 +1,7 @@
 package com.etraveli.payments.client.dto;
 
 import com.etraveli.payments.client.dto.integration.CardTokenResponseDto;
+import com.etraveli.payments.client.dto.integration.ProductMetadataDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PaymentRequestDto {
@@ -15,6 +16,7 @@ public class PaymentRequestDto {
 	private String email;
 	private String AuthenticationMode;
 	private CardTokenResponseDto token;
+	private ProductMetadataDto productMetadata;
 
 	@JsonProperty("amount")
 	public int getAmount() {
@@ -71,6 +73,11 @@ public class PaymentRequestDto {
 		return AuthenticationMode;
 	}
 
+	@JsonProperty("productMetadata")
+	public ProductMetadataDto getProductMetadata() {
+		return productMetadata;
+	}
+
 	public void setAmount(int amount) {
 		this.amount = amount;
 	}
@@ -113,5 +120,9 @@ public class PaymentRequestDto {
 
 	public void setAuthenticationMode(String authenticationMode) {
 		AuthenticationMode = authenticationMode;
+	}
+
+	public void setProductMetadata(ProductMetadataDto productMetadata) {
+		this.productMetadata = productMetadata;
 	}
 }
