@@ -10,14 +10,52 @@
 
 			addEventListeners : function() {
 				$(".card-link").on("click", this.onCardLinkClick);
+				
 				$("#payments_creation_form").on("submit",
 						this.onPaymentFormSubmit);
+				
 				$("#generate_fake_data").on("click",
 						this.onGenerateFakeDataClick);
+				
 				$("#proceed_to_payment").on("click",
 						this.onProceedToPaymentClick);
+				
 				$("#authenticationMode").on("change",
 						this.onAuthenticationModeChange);
+				
+				$("#product_creation_add").on("click",
+						this.onProductCreationAddClick);
+				
+				$("#products_table tbody").on("click", "tr .product-creation-delete", 
+						this.onProductCreationDeleteClick);
+				
+				$("#products_table tbody").on("mouseover", "tr",
+						this.onProductsTableRowOver);
+			},
+			
+			onProductsTableRowOver: function (evt) {
+				$("#products_table .product-creation-delete").hide();
+				$(this).find(".product-creation-delete").show();
+			},
+			
+			onProductCreationDeleteClick: function (evt) {
+				$(this).parents("tr").remove();
+			},
+			
+			onProductCreationAddClick: function (evt) {
+				var rows = $("#products_table > tbody > tr").length;
+				
+				var htmlText = "<tr><td>" + rows 
+							 + "</td><td>" + $("#product_creation_type").val() 
+							 + "</td><td>" + $("#product_creation_id").val()
+							 + "</td><td><input type=button class='btn btn-danger btn-block "
+							 + "product-creation-delete btn-sm' value='Delete Item' /></td></tr>";
+				
+				$(htmlText).insertAfter("#product_creation_row");
+				
+				$("#product_creation_type").val("");
+				$("#product_creation_id").val("");
+				$("#products_table .product-creation-delete").hide();
 			},
 			
 			onAuthenticationModeChange: function (evt) {

@@ -229,6 +229,35 @@
 			</div>
 		</div>
 	</div>
+	
+	<div class="container">
+		<table class="table table-striped" id="products_table">
+			<thead>
+				<tr>
+					<th scope="col">#</th>
+					<th scope="col">Product Type</th>
+					<th scope="col" colspan="2">Identifier</th>
+				</tr>
+			</thead>
+			<tbody>			
+				<tr id="product_creation_row">
+					<th scope="row">...</th>
+					<td>
+						<input type="text" class="form-control" id="product_creation_type" 
+							   placeholder="Product type, i.e. Flights Reservation" /> 
+					</td>
+					<td>
+						<input type="text" class="form-control" id="product_creation_id"  
+							   placeholder="Product Id, i.e. b2f89036dd9c485a99cba9450b317efc"/>
+					</td>
+					<td>
+						<input type="button" class="btn btn-warning btn-block" 
+							   id="product_creation_add" value="Add product" /> 
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
 	<div class="container">
 		<hr />
@@ -240,11 +269,11 @@
 				Create a payment token &gt;</button>
 		</div>
 		<div class="offset-sm-2 col-sm-3">
-			<button class="subscribe btn btn-info btn-block"
+			<button class="btn btn-info btn-block"
 				id="generate_fake_data" type="button">Generate fake data</button>
 		</div>
 		<div class="col-sm-3">
-			<button class="subscribe btn btn-clear btn-block" type="reset">
+			<button class="btn btn-clear btn-block" type="reset">
 				Clear Form</button>
 		</div>
 	</div>
