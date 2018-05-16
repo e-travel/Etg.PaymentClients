@@ -23,7 +23,7 @@
 				$("#proceed_to_payment").on("click",
 						this.onProceedToPaymentClick);
 				
-				$("#use_3d_secure").on("click", this.onUse3dSecureChange);
+				$("#use_3d_secure").on("click", this.onUse3dSecureClick);
 				
 				$("#product_creation_add").on("click",
 						this.onProductCreationAddClick);
@@ -67,7 +67,7 @@
 				$("#products_table .product-creation-delete").hide();
 			},
 			
-			onUse3dSecureChange: function (evt) {
+			onUse3dSecureClick: function (evt) {
 				var $this = $(this);
 				
 				if ($this.is(":checked")) {
@@ -80,15 +80,14 @@
 			onGenerateFakeDataClick: function(evt) {
 				var $form = $("#payments_creation_form");
 
-				$("#merchantref").val(
-						"Flights_"
-								+ faker.internet.color().substr(1)
-										.toUpperCase() + "_Ticket_");
+				$("#merchantref").val("Flights_"
+					+ faker.internet.color().substr(1).toUpperCase() 
+					+ "_Ticket_");
 
 				$("#orderid").val(UUIDv4Generator.generate());
 
-				var brands = [ "pamediakopes.gr", "avion.ro", "mytrip.com",
-						"trip.ru" ];
+				var brands = ["pamediakopes.gr", "avion.ro", 
+							  "mytrip.com", "trip.ru"];
 
 				$("#brand").val(brands[faker.random.number(3)]);
 				$("#country").val(faker.address.countryCode());
@@ -236,41 +235,34 @@
 						$(".card-link[data-card=card3]")
 							.removeClass("disabled").trigger("click");
 						
-						$("#payment_request_text")
-							.html(JSON.stringify(data.chargeRequest, null, "\t"));
-						
-						var template = '<div class="container"><h5>Charge Attempt ##index##: ##gateway## '
-							+ '<span class="badge badge-##outcome_label##">##outcome##</span></h5><pre>'
-							+ '<code class="json formatted-code-block payment-response-text" '
-							+ 'id="payment_response_text_##index##">##content##</code></pre></div>';
+						var template = '<div class="container"><h5>Step ##index## - ##description## '
+							+ '<span class="badge badge-##outcome_label##">##outcome##</span></h5>'
+							+ '<h6><a href=#request_##index## data-toggle=collapse>Request</a></h6>'
+							+ '<pre class=collapse id=request_##index##><code class="json request-text">'
+							+ '##request_content##</code></pre>'
+							+ '<h6><a href=#response_##index## data-toggle=collapse>Response</a></h6>'
+							+ '<pre class=collapse id=response_##index##><code class="json response-text">'
+							+ '##response_content##</code></pre></div>';
 
 						var html = "";
 						
-						for(var i = 0; i < data.chargeAttempts.length; i ++) {
-							var attempt = data.chargeAttempts[i];
+						for(var i = 0; i < data.paymentSteps.length; i ++) {
+							var paymentStep = data.paymentSteps[i];
 							html += template
 								.replace(/##index##/gi, i + 1)
-								.replace(/##gateway##/gi, data.attemptedGateways[i])
-								.replace(/##outcome_label##/gi, attempt.chargeResponse.PaymentSucceeded
+								.replace(/##description##/gi, paymentStep.description)
+								.replace(/##outcome_label##/gi, paymentStep.outcome === "Success"
 									? "success" : "danger")
-								.replace(/##outcome##/gi, attempt.chargeResponse.PaymentSucceeded 
-									? "Success" : "Failure")
-								.replace(/##content##/gi, attempt.successStatusCodeReceived
-										? JSON.stringify(attempt.chargeResponse, null, "\t")
-										: JSON.stringify(attempt.errorContent, null, "\t"));
+								.replace(/##outcome##/gi, paymentStep.outcome === "Success"
+									? "Call succeeded" : "Call failed")
+								.replace(/##request_content##/gi, JSON.stringify(JSON.parse(paymentStep.requestPayload), null, '\t'))
+								.replace(/##response_content##/gi, JSON.stringify(JSON.parse(paymentStep.responsePayload), null, '\t'));
 						}
 						
-						$("#payment_attempts_header").append(html);
-						$("#attempted_gateways_header").append("<ol>"
-							+ data.attemptedGateways
-								.map(function (obj) { return "<li>" + obj + "</li>" })
-								.reduce(function (acc, obj) { return acc + obj })
-							+ "</ol>");
-						
-						$('#payment_request_text, .payment-response-text')
+						$('#card3').append($(html));
+
+						$('.request-text,.response-text')
 							.each(function(i, block) { hljs.highlightBlock(block); });
-						
-						$('#proceed_to_payment').prop('disabled', true);
 					}
 				});
 			}

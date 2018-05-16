@@ -37,9 +37,9 @@
 				<li class="nav-item"><a class="nav-link card-link disabled"
 					href="#" data-card="card2"> 2: Create a Token</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="card3"> 3: Send to back-end</a></li>
+					href="#" data-card="card4"> 3: 3D Secure Redirect</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="card4"> 4: 3D Secure Redirect</a></li>
+					href="#" data-card="card3"> *: Log</a></li>
 			</ul>
 		</div>
 		<div class="card-body p-4 text-left">
@@ -80,35 +80,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="card-content" id="card3">
-				<div class="row">
-					<div class="col-sm-12"> 
-						<h4>URL</h4>
-						<code>POST {payments_service_url}/credit_card_payments/charges</code>
-						<p />
-					</div>
-				</div>
-				
-				<div class="container">
-					<h3>Charge Request</h3>
-					<pre>
-						<code class="json formatted-code-block"
-							id="payment_request_text">
-						</code>
-					</pre>
-				</div>
-				
-				<div class="row">
-					<div class="col-sm-8" id="payment_attempts_header">
-						<h4>Payment Attempts</h4>
-						<hr />
-					</div>
-					<div class="col-sm-4" id="attempted_gateways_header">
-						<h4>Attempted Gateways</h4>
-						<hr />
-					</div>
-				</div>
-			</div>
+			<div class="card-content" id="card3"></div>
 			<div class="card-content" id="card4">Card Content 4</div>		
 		</div>
 	</div>
