@@ -253,25 +253,42 @@
 
 						var html = "";
 						
-						for(var i = 0; i < data.paymentSteps.length; i ++) {
-							var paymentStep = data.paymentSteps[i];
+						for(var i = 0; i < data.paymentActions.length; i ++) {
+							var paymentAction = data.paymentActions[i];
 							html += template
 								.replace(/##index##/gi, i + 1)
-								.replace(/##description##/gi, paymentStep.description)
-								.replace(/##outcome_label##/gi, paymentStep.outcome === "Success"
+								.replace(/##description##/gi, paymentAction.description)
+								.replace(/##outcome_label##/gi, paymentAction.outcome === "Success"
 									? "success" : "danger")
-								.replace(/##outcome##/gi, paymentStep.outcome === "Success"
+								.replace(/##outcome##/gi, paymentAction.outcome === "Success"
 									? "Call succeeded" : "Call failed")
 								.replace(/##request_content##/gi, 
-									JSON.stringify(JSON.parse(paymentStep.requestPayload), null, '\t'))
+									JSON.stringify(JSON.parse(paymentAction.requestPayload), null, '\t'))
 								.replace(/##response_content##/gi, 
-									JSON.stringify(JSON.parse(paymentStep.responsePayload), null, '\t'));
+									JSON.stringify(JSON.parse(paymentAction.responsePayload), null, '\t'));
 						}
 						
 						$('#log-card').append($(html));
 
 						$('.request-text,.response-text')
 							.each(function(i, block) { hljs.highlightBlock(block); });
+
+						var lastAction = data.paymentActions[data.paymentActions.length - 1];
+						
+						if (/^Enrollment/gi.test(lastAction.description)) {
+							var enrollmentCheckResponse = JSON.parse(lastAction.responsePayload);
+							console.log(enrollmentCheckResponse);
+							if (enrollmentCheckResponse && enrollmentCheckResponse.RedirectUrl) {
+								$(".card-link[data-card=threed-secure-card]")
+									.removeClass("disabled").trigger("click");
+								
+								$("#threed-frame").prop("src", enrollmentCheckResponse.RedirectUrl);
+								$("#threed-frame").on("load", function (evt) {
+									console.log("Load event after redirection to 3DS",
+											this.contentWindow.location.href);
+								})
+							}
+						} 
 					}
 				});
 			}

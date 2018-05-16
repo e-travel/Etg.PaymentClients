@@ -6,6 +6,7 @@ import java.util.List;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 import com.etraveli.payments.client.dto.integration.ChargeResponseDto;
 import com.etraveli.payments.client.dto.integration.EnrollmentCheckRequestDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PaymentResponseDto {
 	private boolean isPaymentSuccessful = false;
@@ -19,7 +20,8 @@ public class PaymentResponseDto {
 		this.isPaymentSuccessful = isPaymentSuccessful;
 	}
 
-	public List<PaymentResponseActionDto> getPaymentSteps() {
+	@JsonProperty("paymentActions")
+	public List<PaymentResponseActionDto> getPaymentActions() {
 		return paymentActions;
 	}
 	
