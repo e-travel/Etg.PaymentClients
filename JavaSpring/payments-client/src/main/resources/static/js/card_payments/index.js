@@ -14,14 +14,16 @@
 				$("#payments_creation_form").on("submit",
 						this.onPaymentFormSubmit);
 				
+				$("#payments_creation_form").on("reset",
+						this.onPaymentFormReset);
+				
 				$("#generate_fake_data").on("click",
 						this.onGenerateFakeDataClick);
 				
 				$("#proceed_to_payment").on("click",
 						this.onProceedToPaymentClick);
 				
-				$("#authenticationMode").on("change",
-						this.onAuthenticationModeChange);
+				$("#use_3d_secure").on("click", this.onUse3dSecureChange);
 				
 				$("#product_creation_add").on("click",
 						this.onProductCreationAddClick);
@@ -65,13 +67,13 @@
 				$("#products_table .product-creation-delete").hide();
 			},
 			
-			onAuthenticationModeChange: function (evt) {
+			onUse3dSecureChange: function (evt) {
 				var $this = $(this);
 				
-				if ($this.val() == "AuthenticationNotApplicable") {
-					$(".card-link[data-card=card4]").hide();
-				} else {
+				if ($this.is(":checked")) {
 					$(".card-link[data-card=card4]").show();
+				} else {
+					$(".card-link[data-card=card4]").hide();
 				}
 			},
 
@@ -150,6 +152,13 @@
 				$targetCard.fadeIn();
 			},
 
+			onPaymentFormReset: function (evt) {
+				$("#products_table tr").each(function (idx, obj) {
+					if ($(this).is("#product_creation_row")) return;
+					$(this).remove();
+				});
+			},
+			
 			onPaymentFormSubmit: function(evt) {
 				evt.preventDefault();
 

@@ -9,7 +9,6 @@ public final class ChargeRequestDtoFactory {
 		ChargeRequestDto chargeRequest = new ChargeRequestDto();
 		
 		chargeRequest.setAmountInCents(paymentRequest.getAmount());
-		chargeRequest.setAuthenticationMode(paymentRequest.getAuthenticationMode());
 		chargeRequest.setCardToken(paymentRequest.getToken().getToken());
 		chargeRequest.setCurrency(paymentRequest.getCurrency());
 		chargeRequest.setDomain(paymentRequest.getBrand());

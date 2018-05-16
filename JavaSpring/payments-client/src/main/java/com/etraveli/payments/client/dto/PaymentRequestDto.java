@@ -14,7 +14,7 @@ public class PaymentRequestDto {
 	private String orderId;
 	private String country;
 	private String email;
-	private String authenticationMode;
+	private boolean use3dSecure;
 	private CardTokenResponseDto token;
 	private ProductMetadataDto productMetadata;
 
@@ -68,9 +68,9 @@ public class PaymentRequestDto {
 		return email;
 	}
 
-	@JsonProperty("authenticationMode")
-	public String getAuthenticationMode() {
-		return authenticationMode;
+	@JsonProperty("use3dSecure")
+	public boolean isUse3dSecure() {
+		return use3dSecure;
 	}
 
 	@JsonProperty("productMetadata")
@@ -118,8 +118,8 @@ public class PaymentRequestDto {
 		this.email = email;
 	}
 
-	public void setAuthenticationMode(String authenticationMode) {
-		this.authenticationMode = authenticationMode;
+	public void setUse3dSecure(boolean use3dSecure) {
+		this.use3dSecure = use3dSecure;
 	}
 
 	public void setProductMetadata(ProductMetadataDto productMetadata) {

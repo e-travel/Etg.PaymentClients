@@ -49,7 +49,7 @@ public class PaymentsController {
 	public PaymentResponseDto createPayment(@RequestBody PaymentRequestDto paymentRequestDto, HttpServletRequest request) throws JsonProcessingException {
 		PaymentResponseDto paymentResponse = new PaymentResponseDto();
 		ObjectMapper mapper = new ObjectMapper();
-
+		
 		logger.debug("Initiating card payment... ");
 		
 		// Payments initialization
@@ -94,36 +94,26 @@ public class PaymentsController {
 		List<String> orderedGateways = 
 				simplePaymentsRoutingResponseWrapper.getSimplePaymentsRoutingResponseDto().getOrderedGateways();
 		
+		if (paymentRequestDto.isUse3dSecure()) {
+			handle3dSecureEnrollmentCheck(orderedGateways, enrollmentCheckRequest, paymentResponse);
+		} else {
+			handleNon3dCharge(orderedGateways, chargeRequest, paymentResponse);
+		}
+		
+		return paymentResponse;
+	}
+
+	private void handleNon3dCharge(List<String> orderedGateways,
+			ChargeRequestDto chargeRequest, PaymentResponseDto paymentResponse) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
 		int totalGateways = orderedGateways.size();
+		
 		for(int index = 0, attempt = 1; index < totalGateways; index ++, attempt ++) {
 			String gateway = orderedGateways.get(index);
 			
-			EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper;
-			if (!paymentRequestDto.getAuthenticationMode().equals(AuthenticationModes.AuthenticationNotApplicable)) {
-				logger.info("Requested card authentication mode: " + paymentRequestDto.getAuthenticationMode()
-					+ ", performing enrollment check.");
-				
-				enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
-				enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest);
-				
-				paymentResponse.addPaymentStep("Enrollment check for payment attempt: " + attempt, 
-					mapper.writeValueAsString(enrollmentCheckRequest), 
-					mapper.writeValueAsString(
-							enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
-								? enrollmentCheckResponseWrapper.getEnrollmentCheckResponse()
-								: enrollmentCheckResponseWrapper.getErrorContent()), 
-					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived() 
-						? "Success" : "Failure");
-				
-				if (paymentRequestDto.getAuthenticationMode() == AuthenticationModes.AuthenticationRequired && 
-						enrollmentCheckResponseWrapper.getEnrollmentCheckResponse().isEnrolled() == false) {
-					logger.warn("Cannot continue; 3D secure is required while the customer is not enrolled.");
-					return paymentResponse;
-				}
-			}
-			
 			logger.info("Attempting to charge with " + gateway + " (attempt: " + attempt + " / " + totalGateways + ")");
 			chargeRequest.setGateway(gateway);
+			chargeRequest.setAuthenticationMode(AuthenticationModes.AuthenticationNotApplicable);
 			chargeRequest.setClientRequestId(UUID.randomUUID().toString());
 			
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);
@@ -142,7 +132,34 @@ public class PaymentsController {
 				break;
 			}
 		}
-		
-		return paymentResponse;
+	}
+
+	private void handle3dSecureEnrollmentCheck(List<String> orderedGateways,
+			EnrollmentCheckRequestDto enrollmentCheckRequest, 
+			PaymentResponseDto paymentResponse) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		int totalGateways = orderedGateways.size();
+		for(int index = 0, attempt = 1; index < totalGateways; index ++, attempt ++) {
+			String gateway = orderedGateways.get(index);
+			
+			EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper;
+				logger.info("Requested 3D Secure. Performing enrollment check.");
+				
+				enrollmentCheckRequest.setGateway(gateway);
+				enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
+				enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest);
+				
+				paymentResponse.addPaymentStep("Enrollment check for payment attempt: " + attempt, 
+					mapper.writeValueAsString(enrollmentCheckRequest), 
+					mapper.writeValueAsString(
+							enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
+								? enrollmentCheckResponseWrapper.getEnrollmentCheckResponse()
+								: enrollmentCheckResponseWrapper.getErrorContent()), 
+					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived() 
+						? "Success" : "Failure");
+				
+				if (enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived())
+					break;
+		}
 	}
 }

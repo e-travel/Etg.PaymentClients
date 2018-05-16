@@ -15,7 +15,7 @@
 					merchantReference: paymentFormData.merchantref,
 					orderId: paymentFormData.orderid,
 					email: paymentFormData.email,
-					authenticationMode: paymentFormData.authenticationMode,
+					use3dSecure: paymentFormData.use_3d_secure,
 					productMetadata: {
 						CardToken: token.Token,
 						Products: products.map(function (obj) {
