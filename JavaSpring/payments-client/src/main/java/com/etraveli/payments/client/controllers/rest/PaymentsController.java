@@ -19,6 +19,7 @@ import com.etraveli.payments.client.dto.ChargeResponseWrapperDto;
 import com.etraveli.payments.client.dto.EnrollmentCheckResponseWrapperDto;
 import com.etraveli.payments.client.dto.PaymentRequestDto;
 import com.etraveli.payments.client.dto.PaymentResponseDto;
+import com.etraveli.payments.client.dto.SimplePaymentsRoutingResponseWrapperDto;
 import com.etraveli.payments.client.dto.integration.AuthenticationModes;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 import com.etraveli.payments.client.dto.integration.EnrollmentCheckRequestDto;
@@ -28,6 +29,8 @@ import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingRespons
 import com.etraveli.payments.client.factories.ChargeRequestDtoFactory;
 import com.etraveli.payments.client.factories.EnrollmentCheckRequestDtoFactory;
 import com.etraveli.payments.client.services.PaymentsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 public class PaymentsController {
@@ -43,7 +46,10 @@ public class PaymentsController {
 
 	@RequestMapping(path = "/api/payments/card", method = RequestMethod.POST, 
 			produces = "application/json", consumes = "application/json")
-	public PaymentResponseDto createPayment(@RequestBody PaymentRequestDto paymentRequestDto, HttpServletRequest request) {
+	public PaymentResponseDto createPayment(@RequestBody PaymentRequestDto paymentRequestDto, HttpServletRequest request) throws JsonProcessingException {
+		PaymentResponseDto paymentResponse = new PaymentResponseDto();
+		ObjectMapper mapper = new ObjectMapper();
+
 		logger.debug("Initiating card payment... ");
 		
 		// Payments initialization
@@ -64,9 +70,17 @@ public class PaymentsController {
 		simplePaymentsRoutingRequest.setPreferredGateways(availableGateways);
 		simplePaymentsRoutingRequest.setTransactionValue(paymentRequestDto.getAmount());
 		
-		SimplePaymentsRoutingResponseDto simplePaymentsRoutingResponseDto = paymentsService
-				.performSimpleRouting(simplePaymentsRoutingRequest) 
-				.getSimplePaymentsRoutingResponseDto();
+		SimplePaymentsRoutingResponseWrapperDto simplePaymentsRoutingResponseWrapper = paymentsService
+				.performSimpleRouting(simplePaymentsRoutingRequest);
+		
+		paymentResponse.addPaymentStep("Payment routing", 
+			mapper.writeValueAsString(simplePaymentsRoutingRequest), 
+			mapper.writeValueAsString(
+					simplePaymentsRoutingResponseWrapper.isSuccessStatusCodeReceived()
+						? simplePaymentsRoutingResponseWrapper.getSimplePaymentsRoutingResponseDto()
+						: simplePaymentsRoutingResponseWrapper.getErrorContent()), 
+			simplePaymentsRoutingResponseWrapper.isSuccessStatusCodeReceived() 
+				? "Success" : "Failure");
 		
 		String clientIp = request.getRemoteAddr();
 		
@@ -76,32 +90,52 @@ public class PaymentsController {
 		EnrollmentCheckRequestDto enrollmentCheckRequest = 
 				EnrollmentCheckRequestDtoFactory.getEnrollmentCheckRequest(paymentRequestDto);
 		enrollmentCheckRequest.setClientIp(clientIp);
-		
-		PaymentResponseDto paymentResponse = new PaymentResponseDto();
-		paymentResponse.setChargeRequest(chargeRequest);
 
-		List<String> orderedGateways = simplePaymentsRoutingResponseDto.getOrderedGateways();
+		List<String> orderedGateways = 
+				simplePaymentsRoutingResponseWrapper.getSimplePaymentsRoutingResponseDto().getOrderedGateways();
 		
 		int totalGateways = orderedGateways.size();
-		for(int index = 0; index < totalGateways; index ++) {
+		for(int index = 0, attempt = 1; index < totalGateways; index ++, attempt ++) {
 			String gateway = orderedGateways.get(index);
 			
 			EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper;
-			if (paymentRequestDto.getAuthenticationMode() != AuthenticationModes.AuthenticationNotApplicable) {
+			if (!paymentRequestDto.getAuthenticationMode().equals(AuthenticationModes.AuthenticationNotApplicable)) {
 				logger.info("Requested card authentication mode: " + paymentRequestDto.getAuthenticationMode()
 					+ ", performing enrollment check.");
+				
 				enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
-				enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest); 
+				enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest);
+				
+				paymentResponse.addPaymentStep("Enrollment check for payment attempt: " + attempt, 
+					mapper.writeValueAsString(enrollmentCheckRequest), 
+					mapper.writeValueAsString(
+							enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
+								? enrollmentCheckResponseWrapper.getEnrollmentCheckResponse()
+								: enrollmentCheckResponseWrapper.getErrorContent()), 
+					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived() 
+						? "Success" : "Failure");
+				
+				if (paymentRequestDto.getAuthenticationMode() == AuthenticationModes.AuthenticationRequired && 
+						enrollmentCheckResponseWrapper.getEnrollmentCheckResponse().isEnrolled() == false) {
+					logger.warn("Cannot continue; 3D secure is required while the customer is not enrolled.");
+					return paymentResponse;
+				}
 			}
 			
-			logger.info("Attempting to charge with " + gateway + " (attempt: " + index + " / " + totalGateways + ")");
+			logger.info("Attempting to charge with " + gateway + " (attempt: " + attempt + " / " + totalGateways + ")");
 			chargeRequest.setGateway(gateway);
 			chargeRequest.setClientRequestId(UUID.randomUUID().toString());
 			
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);
 			
-			paymentResponse.getChargeAttempts().add(chargeResponseWrapper);
-			paymentResponse.getAttemptedGateways().add(gateway);
+			paymentResponse.addPaymentStep("Charge for payment attempt: " + attempt, 
+				mapper.writeValueAsString(chargeRequest), 
+				mapper.writeValueAsString(
+						chargeResponseWrapper.isSuccessStatusCodeReceived()
+							? chargeResponseWrapper.getChargeResponse()
+							: chargeResponseWrapper.getErrorContent()), 
+				chargeResponseWrapper.isSuccessStatusCodeReceived() 
+					? "Success" : "Failure");
 			
 			if (chargeResponseWrapper.getChargeResponse().isPaymentSucceded()) {
 				paymentResponse.setPaymentSuccessful(true);

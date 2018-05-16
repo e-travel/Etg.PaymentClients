@@ -38,7 +38,7 @@ public class PaymentsService {
 
 	private static final String AVAILABLE_GATEWAYS = "/credit_card_payments/gateways";
 	private static final String CHARGES = "/credit_card_payments/charges";
-	private static final String ENROLLMENT_CHECKS = "/credit_card_payments/enrollement_checks";
+	private static final String ENROLLMENT_CHECKS = "/credit_card_payments/enrollment_checks";
 	private static final String REVERSALS = "/reversals";
 	private static final String SIMPLE_ROUTING = "/payment_routing/other";
 
@@ -177,7 +177,10 @@ public class PaymentsService {
 					+ httpClientErrorException.getRawStatusCode() + " " + httpClientErrorException.getStatusText());
 			logger.error(httpClientErrorException.toString());
 			
-			return new EnrollmentCheckResponseWrapperDto(false, null);
+			EnrollmentCheckResponseWrapperDto response = new EnrollmentCheckResponseWrapperDto(false, null); 
+			response.setErrorContent(httpClientErrorException.getResponseBodyAsString());
+			
+			return response;
 		}
 	}
 
@@ -203,6 +206,7 @@ public class PaymentsService {
 			SimplePaymentsRoutingResponseDto dummyResponse = new SimplePaymentsRoutingResponseDto();
 			dummyResponse.setOrderedGateways(simplePaymentsRoutingRequest.getPreferredGateways());
 			response = new SimplePaymentsRoutingResponseWrapperDto(false, dummyResponse);
+			response.setErrorContent(httpClientErrorException.getResponseBodyAsString());
 		}
 
 		return response;

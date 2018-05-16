@@ -14,7 +14,7 @@ public class PaymentRequestDto {
 	private String orderId;
 	private String country;
 	private String email;
-	private String AuthenticationMode;
+	private String authenticationMode;
 	private CardTokenResponseDto token;
 	private ProductMetadataDto productMetadata;
 
@@ -70,7 +70,7 @@ public class PaymentRequestDto {
 
 	@JsonProperty("authenticationMode")
 	public String getAuthenticationMode() {
-		return AuthenticationMode;
+		return authenticationMode;
 	}
 
 	@JsonProperty("productMetadata")
@@ -119,7 +119,7 @@ public class PaymentRequestDto {
 	}
 
 	public void setAuthenticationMode(String authenticationMode) {
-		AuthenticationMode = authenticationMode;
+		this.authenticationMode = authenticationMode;
 	}
 
 	public void setProductMetadata(ProductMetadataDto productMetadata) {
