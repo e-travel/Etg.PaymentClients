@@ -33,18 +33,19 @@
 		<div class="card-header">
 			<ul class="nav nav-tabs card-header-tabs">
 				<li class="nav-item"><a class="nav-link card-link active"
-					href="#" data-card="card1"> 1: Payment Form</a></li>
+					href="#" data-card="payment-form-card"> 1: Payment Form</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="card2"> 2: Create a Token</a></li>
+					href="#" data-card="token-card"> 2: Create a Token</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="card4"> 3: 3D Secure Redirect</a></li>
+					href="#" data-card="threed-secure-card"> 3: 3D Secure Redirect</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="card3"> *: Log</a></li>
+					href="#" data-card="log-card"> *: Log</a></li>
 			</ul>
 		</div>
+		
 		<div class="card-body p-4 text-left">
-			<div class="card-content" th:insert="card_payments/form" id="card1"></div>
-			<div class="card-content" id="card2">
+			<div class="card-content" th:insert="card_payments/form" id="payment-form-card"></div>
+			<div class="card-content" id="token-card">
 				<div class="row">
 					<div class="col-sm-12">
 						<h4>URL</h4>
@@ -80,8 +81,8 @@
 					</div>
 				</div>
 			</div>
-			<div class="card-content" id="card3"></div>
-			<div class="card-content" id="card4">Card Content 4</div>		
+			<div class="card-content" id="log-card"></div>
+			<div class="card-content" id="threed-secure-card"></div>		
 		</div>
 	</div>
 </div>

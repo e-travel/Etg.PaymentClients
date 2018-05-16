@@ -3,39 +3,42 @@
 
 		var page = {
 			initialize : function() {
-				$(".card-content:not(#card1)").hide();
-				$(".card-link[data-card=card4]").hide();
+				$(".card-content:not(#payment-form-card)").hide();
+				$(".card-link[data-card=threed-secure-card]").hide();
+				
 				this.addEventListeners();
 			},
 
 			addEventListeners : function() {
 				$(".card-link").on("click", this.onCardLinkClick);
 				
-				$("#payments_creation_form").on("submit",
-						this.onPaymentFormSubmit);
+				$("#payments_creation_form")
+					.on("submit", this.onPaymentFormSubmit);
 				
-				$("#payments_creation_form").on("reset",
-						this.onPaymentFormReset);
+				$("#payments_creation_form")
+					.on("reset", this.onPaymentFormReset);
 				
-				$("#generate_fake_data").on("click",
-						this.onGenerateFakeDataClick);
+				$("#generate_fake_data")
+					.on("click", this.onGenerateFakeDataClick);
 				
-				$("#proceed_to_payment").on("click",
-						this.onProceedToPaymentClick);
+				$("#proceed_to_payment")
+					.on("click", this.onProceedToPaymentClick);
 				
-				$("#use_3d_secure").on("click", this.onUse3dSecureClick);
+				$("#use_3d_secure")
+					.on("click", this.onUse3dSecureClick);
 				
-				$("#product_creation_add").on("click",
-						this.onProductCreationAddClick);
+				$("#product_creation_add")
+					.on("click", this.onProductCreationAddClick);
 				
-				$("#products_table tbody").on("click", "tr .product-creation-delete", 
+				$("#products_table tbody")
+					.on("click", "tr .product-creation-delete", 
 						this.onProductCreationDeleteClick);
 				
-				$("#products_table tbody").on("mouseover", "tr",
-						this.onProductsTableRowOver);
+				$("#products_table tbody")
+					.on("mouseover", "tr", this.onProductsTableRowOver);
 				
-				$("#products_table tbody").on("mouseout", 
-						this.onProductsTableOut);
+				$("#products_table tbody")
+					.on("mouseout", this.onProductsTableOut);
 			},
 			
 			onProductsTableOut: function (evt) {
@@ -71,9 +74,9 @@
 				var $this = $(this);
 				
 				if ($this.is(":checked")) {
-					$(".card-link[data-card=card4]").show();
+					$(".card-link[data-card=threed-secure-card]").show();
 				} else {
-					$(".card-link[data-card=card4]").hide();
+					$(".card-link[data-card=threed-secure-card]").hide();
 				}
 			},
 
@@ -138,7 +141,7 @@
 				
 				$(htmlText).insertAfter("#product_creation_row");
 				$("#products_table .product-creation-delete").hide();
-		},
+			},
 
 			onCardLinkClick: function(evt) {
 				var $this = $(this);
@@ -182,12 +185,13 @@
 					accept: "application/json",
 					contentType: "application/json",
 					data: JSON.stringify(tokenizationRequest),
+					
 					success: function(data) {
 						page.token = data;
 						
 						$form.find(":input").prop("disabled", true);
 						
-						$(".card-link[data-card=card2]")
+						$(".card-link[data-card=token-card]")
 							.removeClass("disabled").trigger("click");
 						
 						$("#tokenization_request_text")
@@ -199,10 +203,11 @@
 						$('#tokenization_request_text, #tokenization_response_text')
 							.each(function(i, block) { hljs.highlightBlock(block); });
 					},
+					
 					error : function() {
 						$form.find(":input").prop("disabled", false);
-						$(".card-link[data-card=card2]").addClass("disabled");
-						$(".card-link[data-card=card1]").trigger("click");
+						$(".card-link[data-card=token-card]").addClass("disabled");
+						$(".card-link[data-card=payment-form-card]").trigger("click");
 					}
 				});
 			},
@@ -212,6 +217,7 @@
 				
 				$("#products_table tr").each(function (idx, obj) {
 					if ($(obj).find(".product-type").length == 0) return;
+					
 					products.push({
 						type: $(obj).find(".product-type").text(), 
 						id: $(obj).find(".product-id").text()
@@ -229,10 +235,11 @@
 					contentType: "application/json",
 					method: "POST",
 					data: JSON.stringify(paymentRequest),
+					
 					success: function (data) {
 						console.log("success", data);
 						
-						$(".card-link[data-card=card3]")
+						$(".card-link[data-card=log-card]")
 							.removeClass("disabled").trigger("click");
 						
 						var template = '<div class="container"><h5>Step ##index## - ##description## '
@@ -255,11 +262,13 @@
 									? "success" : "danger")
 								.replace(/##outcome##/gi, paymentStep.outcome === "Success"
 									? "Call succeeded" : "Call failed")
-								.replace(/##request_content##/gi, JSON.stringify(JSON.parse(paymentStep.requestPayload), null, '\t'))
-								.replace(/##response_content##/gi, JSON.stringify(JSON.parse(paymentStep.responsePayload), null, '\t'));
+								.replace(/##request_content##/gi, 
+									JSON.stringify(JSON.parse(paymentStep.requestPayload), null, '\t'))
+								.replace(/##response_content##/gi, 
+									JSON.stringify(JSON.parse(paymentStep.responsePayload), null, '\t'));
 						}
 						
-						$('#card3').append($(html));
+						$('#log-card').append($(html));
 
 						$('.request-text,.response-text')
 							.each(function(i, block) { hljs.highlightBlock(block); });
