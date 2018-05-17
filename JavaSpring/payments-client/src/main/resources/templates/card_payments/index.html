@@ -3,28 +3,7 @@
 	xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:th="http://www.thymeleaf.org"
 	xmlns:layout="http://www.thymeleaf.org"
- 	layout:decorate="@{layouts/base}">
-
-<nav layout:fragment="navigation"
-	class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-	<a class="navbar-brand" href="#">Payments tool</a>
-	<button class="navbar-toggler" type="button" data-toggle="collapse"
-		data-target="#navbarsExampleDefault"
-		aria-controls="navbarsExampleDefault" aria-expanded="false"
-		aria-label="Toggle navigation">
-		<span class="navbar-toggler-icon"></span>
-	</button>
-
-	<div class="collapse navbar-collapse" id="navbarsExampleDefault">
-		<ul class="navbar-nav mr-auto">
-			<li class="nav-item active"><a class="nav-link" href="#">Card
-					payments <span class="sr-only">(current)</span>
-			</a></li>
-			<li class="nav-item"><a class="nav-link" href="#">Alternative
-					payments</a></li>
-		</ul>
-	</div>
-</nav>
+ 	layout:decorate="@{/layouts/base}">
 
 <div class="container" layout:fragment="content">
 	<h1 class="mt-5">Credit Card Payment Flow</h1>

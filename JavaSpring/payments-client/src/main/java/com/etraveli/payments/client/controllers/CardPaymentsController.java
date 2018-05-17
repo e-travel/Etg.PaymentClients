@@ -11,4 +11,14 @@ public class CardPaymentsController {
 	public ModelAndView index() {
 		return new ModelAndView("card_payments/index", "cardInfo", new Object());
 	}
+	
+	@RequestMapping(method = RequestMethod.GET, path = "/card_payments/success_3d", name = "success_3d")
+	public ModelAndView success_3d() {
+		return new ModelAndView("card_payments/success_3d");
+	}
+	
+	@RequestMapping(method = RequestMethod.GET, path = "/card_payments/failure_3d", name = "failure_3d")
+	public ModelAndView failure_3d() {
+		return new ModelAndView("card_payments/failure_3d");
+	}
 }
