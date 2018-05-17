@@ -35,7 +35,7 @@
 				<li class="nav-item"><a class="nav-link card-link active"
 					href="#" data-card="payment-form-card"> 1: Payment Form</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="token-card"> 2: Create a Token</a></li>
+					href="#" data-card="token-card"> 2: Tokenization &amp; Routing</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
 					href="#" data-card="threed-secure-card"> 3: 3D Secure Redirect</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
@@ -48,9 +48,8 @@
 			<div class="card-content" id="token-card">
 				<div class="row">
 					<div class="col-sm-12">
-						<h4>URL</h4>
-						<code>POST {tokenization_service_url}/card_token</code>
-						<p />
+						<h4>Tokenization</h4>
+						<hr />
 					</div>
 				</div>
 				<div class="row">
@@ -70,6 +69,16 @@
 							</code>
 						</pre>
 					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-12">
+						<h4>Routing</h4> 
+						<hr />
+					</div>
+					<div class="col-sm-6">
+						This gateway order was decided by payment routing. Feel free to change it by dragging and dropping items.
+					</div>
+					<div class="col-sm-6 routing-container"></div>
 				</div>
 				<div class="container">
 					<hr />
@@ -113,4 +122,6 @@
 		th:src="@{/js/factories/tokenizationRequestFactory.js}"></script>
 	<script type="text/javascript"
 		th:src="@{/js/factories/paymentRequestFactory.js}"></script>
+	<script type="text/javascript"
+		th:src="@{/js/vendor/jquery.sortable.min.js}"></script>
 </div>

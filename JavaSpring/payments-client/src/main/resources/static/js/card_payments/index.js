@@ -202,6 +202,32 @@
 
 						$('#tokenization_request_text, #tokenization_response_text')
 							.each(function(i, block) { hljs.highlightBlock(block); });
+						
+						$.ajax({
+							url: "/api/gateways/simple_routing",
+							accept: "application/json",
+							contentType: "application/json",
+							method: "GET",
+							data: {
+								bin: data.Metadata.Bin,
+								currency: page.formDataHash.currency,
+								amount: page.formDataHash.amount
+							},
+							
+							success: function (routingData) {
+								console.log("Routing success", routingData);
+								
+								var gateways =
+									routingData.simplePaymentsRoutingResponseDto.OrderedGateways;
+								
+								$(".routing-container").append("<ol class='sortable'><li>" + 
+										gateways.reduce(function (acc, obj) { 
+											return acc + "</li><li>" + obj;
+										}));
+								
+								$(".sortable").sortable();
+							}
+						});
 					},
 					
 					error : function() {
