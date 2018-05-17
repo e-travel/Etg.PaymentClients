@@ -239,7 +239,7 @@
 			},
 			
 			onProceedToPaymentClick: function (evt) {
-				var products = [];
+				var products = [], gateways = [];
 				
 				$("#products_table tr").each(function (idx, obj) {
 					if ($(obj).find(".product-type").length == 0) return;
@@ -250,8 +250,12 @@
 					});
 				});
 				
+				$("ol.sortable li").each(function (idx, obj) {
+					gateways.push($(obj).text());
+				});
+				
 				var paymentRequest = window.factories
-					.paymentRequestFactory(page.formDataHash, page.token, products);
+					.paymentRequestFactory(page.formDataHash, page.token, products, gateways);
 				
 				console.log("Sending payment request to back end", paymentRequest);
 				

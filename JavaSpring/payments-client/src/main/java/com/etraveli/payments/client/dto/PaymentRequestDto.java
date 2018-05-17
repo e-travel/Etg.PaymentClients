@@ -1,5 +1,7 @@
 package com.etraveli.payments.client.dto;
 
+import java.util.List;
+
 import com.etraveli.payments.client.dto.integration.CardTokenResponseDto;
 import com.etraveli.payments.client.dto.integration.ProductMetadataDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,6 +19,7 @@ public class PaymentRequestDto {
 	private boolean use3dSecure;
 	private CardTokenResponseDto token;
 	private ProductMetadataDto productMetadata;
+	private List<String> gateways;
 
 	@JsonProperty("amount")
 	public int getAmount() {
@@ -78,6 +81,11 @@ public class PaymentRequestDto {
 		return productMetadata;
 	}
 
+	@JsonProperty("gateways")
+	public List<String> getGateways() {
+		return gateways;
+	}
+
 	public void setAmount(int amount) {
 		this.amount = amount;
 	}
@@ -124,5 +132,9 @@ public class PaymentRequestDto {
 
 	public void setProductMetadata(ProductMetadataDto productMetadata) {
 		this.productMetadata = productMetadata;
+	}
+
+	public void setGateways(List<String> gateways) {
+		this.gateways = gateways;
 	}
 }

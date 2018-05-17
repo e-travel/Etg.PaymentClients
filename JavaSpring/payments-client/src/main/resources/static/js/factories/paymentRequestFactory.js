@@ -1,7 +1,7 @@
 (function (window, document, undefined) {
 	window.factories = window.factories || {};
 	window.factories.paymentRequestFactory = window.factories.paymentRequestFactory
-			|| function(paymentFormData, token, products) {
+			|| function(paymentFormData, token, products, gateways) {
 				console.log("Payment Request Factory", paymentFormData, products);
 		
 				return {
@@ -15,6 +15,7 @@
 					merchantReference: paymentFormData.merchantref,
 					orderId: paymentFormData.orderid,
 					email: paymentFormData.email,
+					gateways: gateways,
 					use3dSecure: paymentFormData.use_3d_secure === "true",
 					productMetadata: {
 						CardToken: token.Token,
