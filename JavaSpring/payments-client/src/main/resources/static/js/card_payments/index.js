@@ -317,6 +317,19 @@
 									console.log("Load event after redirection to 3DS",
 											this.contentWindow.location.href);
 								})
+							} else if (enrollmentCheckResponse && enrollmentCheckResponse.AcsUri) {
+								var enrollmentCheckResponse = JSON.parse(lastAction.responsePayload);
+								console.log(enrollmentCheckResponse);
+								if (enrollmentCheckResponse && enrollmentCheckResponse.AcsUri) {
+									$(".card-link[data-card=threed-secure-card]")
+										.removeClass("disabled").trigger("click");
+									
+									$("#threed-frame").prop("src", enrollmentCheckResponse.AcsUri);
+									$("#threed-frame").on("load", function (evt) {
+										console.log("Load event after redirection to 3DS",
+												this.contentWindow.location.href);
+									})
+								}
 							}
 						} 
 					}

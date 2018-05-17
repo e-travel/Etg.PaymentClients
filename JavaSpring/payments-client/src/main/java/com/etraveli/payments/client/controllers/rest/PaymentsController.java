@@ -40,35 +40,34 @@ public class PaymentsController {
 	@RequestMapping(path = "/api/payments/card", method = RequestMethod.POST, 
 			produces = "application/json", consumes = "application/json")
 	public PaymentResponseDto createPayment(@RequestBody PaymentRequestDto paymentRequestDto, 
-			HttpServletRequest request) throws JsonProcessingException {
+											HttpServletRequest request) throws JsonProcessingException {
 		PaymentResponseDto paymentResponse = new PaymentResponseDto();
 		
 		logger.debug("Initiating card payment... ");
 		String clientIp = request.getRemoteAddr();
-		
-		ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequestDto);
-		chargeRequest.setClientIp(clientIp);
-		
-		EnrollmentCheckRequestDto enrollmentCheckRequest = 
-				EnrollmentCheckRequestDtoFactory.getEnrollmentCheckRequest(paymentRequestDto);
-		enrollmentCheckRequest.setClientIp(clientIp);
+		String baseUrl = request.getLocalName() + ":" + request.getLocalPort();
 
 		List<String> orderedGateways = paymentRequestDto.getGateways();
 		
 		if (paymentRequestDto.isUse3dSecure()) {
-			handle3dSecureEnrollmentCheck(orderedGateways, enrollmentCheckRequest, paymentResponse);
+			check3dEnrollment(orderedGateways, paymentRequestDto, clientIp, paymentResponse, baseUrl);
 		} else {
-			handleNon3dCharge(orderedGateways, chargeRequest, paymentResponse);
+			chargeNon3D(orderedGateways, paymentRequestDto, clientIp, paymentResponse);
 		}
 		
 		return paymentResponse;
 	}
 
-	private void handleNon3dCharge(List<String> orderedGateways,
-			ChargeRequestDto chargeRequest, PaymentResponseDto paymentResponse) throws JsonProcessingException {
+	private void chargeNon3D(List<String> orderedGateways, PaymentRequestDto paymentRequestDto,
+							 String clientIp, PaymentResponseDto paymentResponse) 
+										   throws JsonProcessingException {
+		
 		ObjectMapper mapper = new ObjectMapper();
 		int totalGateways = orderedGateways.size();
-		
+
+		ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequestDto);
+		chargeRequest.setClientIp(clientIp);
+
 		for(int index = 0, attempt = 1; index < totalGateways; index ++, attempt ++) {
 			String gateway = orderedGateways.get(index);
 			
@@ -95,11 +94,20 @@ public class PaymentsController {
 		}
 	}
 
-	private void handle3dSecureEnrollmentCheck(List<String> orderedGateways,
-			EnrollmentCheckRequestDto enrollmentCheckRequest, 
-			PaymentResponseDto paymentResponse) throws JsonProcessingException {
+	private void check3dEnrollment(List<String> orderedGateways, PaymentRequestDto paymentRequestDto,
+								   String clientIp, PaymentResponseDto paymentResponse, String baseUrl) 
+													   throws JsonProcessingException {
+		
 		ObjectMapper mapper = new ObjectMapper();
 		int totalGateways = orderedGateways.size();
+		
+		EnrollmentCheckRequestDto enrollmentCheckRequest = 
+				EnrollmentCheckRequestDtoFactory.getEnrollmentCheckRequest(paymentRequestDto);
+
+		enrollmentCheckRequest.setClientIp(clientIp);
+		enrollmentCheckRequest.setSuccess3DSecureUrl(baseUrl + "/card_payments/success_3d");
+		enrollmentCheckRequest.setFailure3DSecureUrl(baseUrl + "/card_payments/failure_3d");
+
 		for(int index = 0, attempt = 1; index < totalGateways; index ++, attempt ++) {
 			String gateway = orderedGateways.get(index);
 			
@@ -107,6 +115,7 @@ public class PaymentsController {
 				logger.info("Requested 3D Secure. Performing enrollment check.");
 				
 				enrollmentCheckRequest.setGateway(gateway);
+				
 				enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
 				enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest);
 				
