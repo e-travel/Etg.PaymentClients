@@ -1,7 +1,6 @@
 package com.etraveli.payments.client.factories;
 
 import com.etraveli.payments.client.dto.PaymentRequestDto;
-import com.etraveli.payments.client.dto.integration.AuthenticationModes;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 
 public final class ChargeRequestDtoFactory {

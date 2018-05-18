@@ -3,9 +3,6 @@ package com.etraveli.payments.client.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
-import com.etraveli.payments.client.dto.integration.ChargeResponseDto;
-import com.etraveli.payments.client.dto.integration.EnrollmentCheckRequestDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PaymentResponseDto {

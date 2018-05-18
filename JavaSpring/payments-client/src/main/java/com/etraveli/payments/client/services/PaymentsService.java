@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +33,8 @@ import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingRespons
 @Service
 @Scope("prototype")
 public class PaymentsService {
+	private static final String EXECUTING_HTTP_POST_REQUEST_TO = "Executing HTTP POST request to: {} ...";
+
 	private static final Logger logger = LoggerFactory.getLogger(PaymentsService.class);
 
 	private static final String AVAILABLE_GATEWAYS = "/credit_card_payments/gateways";
@@ -44,7 +45,7 @@ public class PaymentsService {
 
 	@Autowired
 	private final IntegrationConfig integrationConfig;
-	
+
 	@Autowired
 	private final RestTemplate restTemplate;
 
@@ -59,14 +60,18 @@ public class PaymentsService {
 		String url = integrationConfig.getPaymentsApiUrl() + AVAILABLE_GATEWAYS;
 
 		try {
-			logger.debug("Executing HTTP GET request to: " + url);
+
+			logger.debug("Executing HTTP GET request to: {}", url);
 			ResponseEntity<String[]> availableGatewaysResponseEntity = restTemplate.getForEntity(url, String[].class);
 
-			logger.info("Available gateways:" + Arrays.toString(availableGatewaysResponseEntity.getBody()));
+			String availableGatewaysAsString = Arrays.toString(availableGatewaysResponseEntity.getBody());
+			logger.info("Available gateways: {}", availableGatewaysAsString);
+
 			response = new AvailableGatewaysResponseWrapperDto(true,
 					Arrays.asList(availableGatewaysResponseEntity.getBody()));
+
 		} catch (HttpClientErrorException httpClientErrorException) {
-			logger.error("Could not get available gateways");
+			logger.error("Could not get available gateways: {}", httpClientErrorException.getMessage());
 			response = new AvailableGatewaysResponseWrapperDto(false, new ArrayList<>());
 		}
 
@@ -79,17 +84,20 @@ public class PaymentsService {
 		String url = integrationConfig.getPaymentsApiUrl() + AVAILABLE_GATEWAYS + "/" + gateway + "/currencies";
 
 		try {
-			logger.debug("Executing HTTP GET request to: " + url);
+			logger.debug("Executing HTTP GET request to: {}", url);
 			ResponseEntity<String[]> supportedCurrenciesResponseEntity = restTemplate.getForEntity(url, String[].class);
 
-			logger.info("Gateway: " + gateway + " supported currencies: "
-					+ Arrays.toString(supportedCurrenciesResponseEntity.getBody()));
+			String supportedCurrencies = Arrays.toString(supportedCurrenciesResponseEntity.getBody());
+			logger.info("Gateway: {}, supported currencies: {}", gateway, supportedCurrencies);
+
 			response = new SupportedCurrenciesResponseWrapperDto(true, gateway,
 					Arrays.asList(supportedCurrenciesResponseEntity.getBody()));
 		} catch (HttpClientErrorException httpClientErrorException) {
-			logger.error("Could not get supported currencies for gateway:" + gateway);
+			logger.error("Could not get supported currencies for gateway: {}. Reason: {}", gateway,
+					httpClientErrorException.getMessage());
+			logger.error(httpClientErrorException.getMessage(), httpClientErrorException);
 			response = new SupportedCurrenciesResponseWrapperDto(false, gateway, new ArrayList<>());
-		} 
+		}
 
 		return response;
 	}
@@ -102,19 +110,19 @@ public class PaymentsService {
 			return new HashMap<>();
 
 		availableGatewaysResponseWrapperDto.getAvailableGateways().stream().forEach(gateway -> {
-			SupportedCurrenciesResponseWrapperDto supportedCurrenciesResponseWrapperDto = 
-					getSupportedCurrenciesForGateay(gateway);
-			
+			SupportedCurrenciesResponseWrapperDto supportedCurrenciesResponseWrapperDto = getSupportedCurrenciesForGateay(
+					gateway);
+
 			if (supportedCurrenciesResponseWrapperDto.isSuccessStatusCodeReceived()
 					&& supportedCurrenciesResponseWrapperDto.getSupportedCurrencies() != null
-					&& supportedCurrenciesResponseWrapperDto.getSupportedCurrencies().size() > 0) {
+					&& !supportedCurrenciesResponseWrapperDto.getSupportedCurrencies().isEmpty()) {
 
 				supportedCurrenciesResponseWrapperDto.getSupportedCurrencies().stream().forEach(currency -> {
 					if (result.containsKey(currency)) {
 						result.get(currency).add(gateway);
 						return;
 					}
-					
+
 					List<String> gateways = new ArrayList<>(6);
 					gateways.add(gateway);
 					result.put(currency, gateways);
@@ -126,38 +134,34 @@ public class PaymentsService {
 	}
 
 	public ChargeResponseWrapperDto performCharge(ChargeRequestDto chargeRequest) {
-		logger.debug("Client request id for charge:" + chargeRequest.getClientRequestId());
+		logger.debug("Client request id for charge: {}", chargeRequest.getClientRequestId());
 
 		ChargeResponseWrapperDto response;
 
 		String url = integrationConfig.getPaymentsApiUrl() + CHARGES;
 
 		try {
-			logger.debug("Executing HTTP POST request to: " + url + " ...");
+			logger.debug(EXECUTING_HTTP_POST_REQUEST_TO, url);
 			ResponseEntity<ChargeResponseDto> chargeResponseEntity = restTemplate.postForEntity(url, chargeRequest,
 					ChargeResponseDto.class);
-			
-			if (chargeResponseEntity.getStatusCode() != HttpStatus.CREATED) {
-				logger.debug("Received HTTP status: " + chargeResponseEntity.getStatusCodeValue() 
-			       + " " + chargeResponseEntity.getStatusCode().toString());
-				
+
+			logger.debug("Received HTTP status: {} {}", chargeResponseEntity.getStatusCodeValue(),
+					chargeResponseEntity.getStatusCode());
+
+			if (chargeResponseEntity.getStatusCode() != HttpStatus.CREATED)
 				response = new ChargeResponseWrapperDto(false, null);
-			} else {
-				logger.debug("Received HTTP status 201 CREATED...");
+			else
 				response = new ChargeResponseWrapperDto(true, chargeResponseEntity.getBody());
-			}
+
 		} catch (HttpClientErrorException httpClientErrorException) {
 			response = new ChargeResponseWrapperDto(false, null);
 			response.setErrorContent(httpClientErrorException.getResponseBodyAsString());
 
-			if (httpClientErrorException.getRawStatusCode() == 502) {
-				logger.debug("Received HTTP status 502 BAD_GATEWAY...");
+			logger.debug("Received HTTP status: {} {} ", httpClientErrorException.getRawStatusCode(),
+					httpClientErrorException.getStatusText());
+
+			if (httpClientErrorException.getRawStatusCode() == 502)
 				reverse(chargeRequest.getClientRequestId());
-				logger.debug("Enqueued reversal");
-			} else {
-				logger.debug("Received HTTP status: " + httpClientErrorException.getRawStatusCode() 
-					+ " " + httpClientErrorException.getStatusText());
-			}
 		}
 
 		return response;
@@ -165,21 +169,21 @@ public class PaymentsService {
 
 	public EnrollmentCheckResponseWrapperDto performEnrollmentCheck(EnrollmentCheckRequestDto enrollmentCheckRequest) {
 		String url = integrationConfig.getPaymentsApiUrl() + ENROLLMENT_CHECKS;
-		logger.debug("Executing HTTP POST request to:" + url + " ...");
-		
+		logger.debug(EXECUTING_HTTP_POST_REQUEST_TO, url);
+
 		try {
 			ResponseEntity<EnrollmentCheckResponseDto> enrollmentCheckResponseEntity = restTemplate.postForEntity(url,
 					enrollmentCheckRequest, EnrollmentCheckResponseDto.class);
-			
+
 			return new EnrollmentCheckResponseWrapperDto(true, enrollmentCheckResponseEntity.getBody());
 		} catch (HttpClientErrorException httpClientErrorException) {
-			logger.error("Enrollment check request failed with: "
-					+ httpClientErrorException.getRawStatusCode() + " " + httpClientErrorException.getStatusText());
+			logger.error("Enrollment check request failed with: " + httpClientErrorException.getRawStatusCode() + " "
+					+ httpClientErrorException.getStatusText());
 			logger.error(httpClientErrorException.toString());
-			
-			EnrollmentCheckResponseWrapperDto response = new EnrollmentCheckResponseWrapperDto(false, null); 
+
+			EnrollmentCheckResponseWrapperDto response = new EnrollmentCheckResponseWrapperDto(false, null);
 			response.setErrorContent(httpClientErrorException.getResponseBodyAsString());
-			
+
 			return response;
 		}
 	}
@@ -187,22 +191,23 @@ public class PaymentsService {
 	public SimplePaymentsRoutingResponseWrapperDto performSimpleRouting(
 			SimplePaymentsRoutingRequestDto simplePaymentsRoutingRequest) {
 		SimplePaymentsRoutingResponseWrapperDto response;
-		
-		logger.debug("Original gateway order:"
-				+ Arrays.toString(simplePaymentsRoutingRequest.getPreferredGateways().toArray()));
+
+		String orderedGatewaysAsString = Arrays.toString(simplePaymentsRoutingRequest.getPreferredGateways().toArray());
+		logger.debug("Original gateway order: {}", orderedGatewaysAsString);
 
 		String url = integrationConfig.getPaymentsApiUrl() + SIMPLE_ROUTING;
 
 		try {
-			logger.debug("Executing HTTP POST request to:" + url + " ...");
+			logger.debug(EXECUTING_HTTP_POST_REQUEST_TO, url);
 			ResponseEntity<SimplePaymentsRoutingResponseDto> simplePaymentsRoutingResponseEntity = restTemplate
 					.postForEntity(url, simplePaymentsRoutingRequest, SimplePaymentsRoutingResponseDto.class);
 			SimplePaymentsRoutingResponseDto body = simplePaymentsRoutingResponseEntity.getBody();
-		
-			logger.debug("Routed gateway order:" + Arrays.toString(body.getOrderedGateways().toArray()));
+
+			String orderedGatwaysAsString = Arrays.toString(body.getOrderedGateways().toArray());
+			logger.debug("Routed gateway order: {}", orderedGatwaysAsString);
 			response = new SimplePaymentsRoutingResponseWrapperDto(true, body);
 		} catch (HttpClientErrorException httpClientErrorException) {
-			logger.warn("Payment routing failed with code: " + httpClientErrorException.getRawStatusCode());
+			logger.warn("Payment routing failed with code: {}", httpClientErrorException.getRawStatusCode());
 			SimplePaymentsRoutingResponseDto dummyResponse = new SimplePaymentsRoutingResponseDto();
 			dummyResponse.setOrderedGateways(simplePaymentsRoutingRequest.getPreferredGateways());
 			response = new SimplePaymentsRoutingResponseWrapperDto(false, dummyResponse);
@@ -214,17 +219,17 @@ public class PaymentsService {
 
 	private void reverse(String clientRequestId) {
 		String url = integrationConfig.getPaymentsApiUrl() + REVERSALS;
-		logger.debug("Executing HTTP POST request to: " + url + " ...");
+		logger.debug(EXECUTING_HTTP_POST_REQUEST_TO, url);
 		Map<String, String> uriVariables = new HashMap<>();
 		uriVariables.put("clientRequestId", clientRequestId);
-		
+
 		try {
 			ResponseEntity<ReversalResponseDto> reversalResponseEntity = restTemplate.postForEntity(url, null,
 					ReversalResponseDto.class, uriVariables);
-			logger.debug("Reversal for request: " + clientRequestId + " queued with job id:"
-					+ reversalResponseEntity.getBody().getJobId());
+			logger.debug("Reversal for request: {} queued with job id: {}", clientRequestId,
+					reversalResponseEntity.getBody().getJobId());
 		} catch (HttpClientErrorException httpClientErrorException) {
-			logger.warn("Failed to reverse request: " + clientRequestId);
+			logger.warn("Failed to reverse request: {}", clientRequestId);
 		}
 	}
 }
