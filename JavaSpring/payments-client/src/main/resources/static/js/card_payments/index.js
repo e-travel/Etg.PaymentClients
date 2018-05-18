@@ -98,7 +98,7 @@
 				$("#amount").val(10000 + faker.random.number(10000));
 
 				var currencies = [ "AED", "ALL", "AUD", "BGN", "BRL", "CAD",
-						"CHF", "CNY", "CZK", "DKK", "EGP", "EUR", "GBP", "HKD",
+						"CHF", "CNY", "CZK", "DKK", "EGP", "EUR", "GBP", "HKD", 
 						"HRK", "HUF", "IDR", "ILS", "INR", "JPY", "KRW", "KWD",
 						"KZT", "MXN", "MYR", "NOK", "NZD", "PHP", "PLN", "RON",
 						"RSD", "RUB", "SAR", "SEK", "SGD", "THB", "TRY", "TWD",
@@ -267,78 +267,74 @@
 					method: "POST",
 					data: JSON.stringify(paymentRequest),
 					
-					success: function (data) {
-						console.log("success", data);
-						
-						$(".card-link[data-card=log-card]")
+					success: page.onInitialPaymentSuccess,
+				});
+			},
+			
+			onInitialPaymentSuccess: function (data) {
+				console.log("success", data);
+				
+				$(".card-link[data-card=log-card]")
+					.removeClass("disabled").trigger("click");
+				
+				var template = '<div class="container"><h5>Step ##index## - ##description## '
+					+ '<span class="badge badge-##outcome_label##">##outcome##</span></h5>'
+					+ '<h6><a href=#request_##index## data-toggle=collapse>Request</a></h6>'
+					+ '<pre class=collapse id=request_##index##><code class="json request-text">'
+					+ '##request_content##</code></pre>'
+					+ '<h6><a href=#response_##index## data-toggle=collapse>Response</a></h6>'
+					+ '<pre class=collapse id=response_##index##><code class="json response-text">'
+					+ '##response_content##</code></pre></div>';
+
+				var html = "";
+				
+				for(var i = 0; i < data.paymentActions.length; i ++) {
+					var paymentAction = data.paymentActions[i];
+					html += template
+						.replace(/##index##/gi, i + 1)
+						.replace(/##description##/gi, paymentAction.description)
+						.replace(/##outcome_label##/gi, paymentAction.outcome === "Success"
+							? "success" : "danger")
+						.replace(/##outcome##/gi, paymentAction.outcome === "Success"
+							? "Call succeeded" : "Call failed")
+						.replace(/##request_content##/gi, 
+							JSON.stringify(JSON.parse(paymentAction.requestPayload), null, '\t'))
+						.replace(/##response_content##/gi, 
+							JSON.stringify(JSON.parse(paymentAction.responsePayload), null, '\t'));
+				}
+				
+				$('#log-card').append($(html));
+
+				$('.request-text,.response-text')
+					.each(function(i, block) { hljs.highlightBlock(block); });
+
+				var lastAction = data.paymentActions[data.paymentActions.length - 1];
+				
+				if (/^Enrollment/gi.test(lastAction.description)) {
+					var enrollmentCheckResponse = JSON.parse(lastAction.responsePayload);
+
+					console.log(enrollmentCheckResponse);
+					if (enrollmentCheckResponse && enrollmentCheckResponse.RedirectUrl) {
+						$(".card-link[data-card=threed-secure-card]")
 							.removeClass("disabled").trigger("click");
 						
-						var template = '<div class="container"><h5>Step ##index## - ##description## '
-							+ '<span class="badge badge-##outcome_label##">##outcome##</span></h5>'
-							+ '<h6><a href=#request_##index## data-toggle=collapse>Request</a></h6>'
-							+ '<pre class=collapse id=request_##index##><code class="json request-text">'
-							+ '##request_content##</code></pre>'
-							+ '<h6><a href=#response_##index## data-toggle=collapse>Response</a></h6>'
-							+ '<pre class=collapse id=response_##index##><code class="json response-text">'
-							+ '##response_content##</code></pre></div>';
+						$("#threed_frame").prop("src", enrollmentCheckResponse.RedirectUrl);
+					} else if (enrollmentCheckResponse && enrollmentCheckResponse.AcsUri) {
+						$(".card-link[data-card=threed-secure-card]")
+							.removeClass("disabled").trigger("click");
 
-						var html = "";
+						var termUrl = document.location.origin + "/card_payments/return_from_3d";
 						
-						for(var i = 0; i < data.paymentActions.length; i ++) {
-							var paymentAction = data.paymentActions[i];
-							html += template
-								.replace(/##index##/gi, i + 1)
-								.replace(/##description##/gi, paymentAction.description)
-								.replace(/##outcome_label##/gi, paymentAction.outcome === "Success"
-									? "success" : "danger")
-								.replace(/##outcome##/gi, paymentAction.outcome === "Success"
-									? "Call succeeded" : "Call failed")
-								.replace(/##request_content##/gi, 
-									JSON.stringify(JSON.parse(paymentAction.requestPayload), null, '\t'))
-								.replace(/##response_content##/gi, 
-									JSON.stringify(JSON.parse(paymentAction.responsePayload), null, '\t'));
-						}
+						var html = "<div style='display: none;'>" 								 
+							+ "<form action='" + enrollmentCheckResponse.AcsUri + "' method=POST target=threed_frame id=threed_form>"
+							+ "<input type=hidden name=PaReq value='" + enrollmentCheckResponse.PaReq + "' />"
+							+ "<input type=hidden name=MD value='" + enrollmentCheckResponse.Md + "' />"
+							+ "<input type=hidden name=TermUrl value='" + termUrl + "' /></form></div>";
 						
-						$('#log-card').append($(html));
-
-						$('.request-text,.response-text')
-							.each(function(i, block) { hljs.highlightBlock(block); });
-
-						var lastAction = data.paymentActions[data.paymentActions.length - 1];
-						
-						if (/^Enrollment/gi.test(lastAction.description)) {
-							var enrollmentCheckResponse = JSON.parse(lastAction.responsePayload);
-							console.log(enrollmentCheckResponse);
-							if (enrollmentCheckResponse && enrollmentCheckResponse.RedirectUrl) {
-								$(".card-link[data-card=threed-secure-card]")
-									.removeClass("disabled").trigger("click");
-								
-								$("#threed-frame").prop("src", enrollmentCheckResponse.RedirectUrl);
-							} else if (enrollmentCheckResponse && enrollmentCheckResponse.AcsUri) {
-								var enrollmentCheckResponse = JSON.parse(lastAction.responsePayload);
-								console.log(enrollmentCheckResponse);
-								if (enrollmentCheckResponse && enrollmentCheckResponse.AcsUri) {
-									$(".card-link[data-card=threed-secure-card]")
-										.removeClass("disabled").trigger("click");
-									
-									var appendOrNewQueryString = /\?/gi.test(enrollmentCheckResponse.AcsUri)
-										? "&" : "?";
-									
-									var termUrl = document.location.origin + "/card_payments/return_from_3d";
-									
-									var redirectUrl = enrollmentCheckResponse.AcsUri 
-										+ appendOrNewQueryString + "PaReq=" + encodeURIComponent(enrollmentCheckResponse.PaReq) 
-										+ "&MD=" + encodeURIComponent(enrollmentCheckResponse.Md || "")
-										+ "&TermUrl=" + encodeURIComponent(termUrl);
-									
-									console.log(redirectUrl);
-									
-									$("#threed-frame").prop("src", redirectUrl);
-								}
-							}
-						} 
+						$("body").append(html);
+						$("#threed_form").submit();
 					}
-				});
+				} 
 			}
 		};
 
