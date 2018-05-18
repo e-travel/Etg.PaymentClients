@@ -105,8 +105,8 @@ public class PaymentsController {
 				EnrollmentCheckRequestDtoFactory.getEnrollmentCheckRequest(paymentRequestDto);
 
 		enrollmentCheckRequest.setClientIp(clientIp);
-		enrollmentCheckRequest.setSuccess3DSecureUrl(baseUrl + "/card_payments/success_3d");
-		enrollmentCheckRequest.setFailure3DSecureUrl(baseUrl + "/card_payments/failure_3d");
+		enrollmentCheckRequest.setSuccess3DSecureUrl(baseUrl + "/card_payments/yandex_success_3d");
+		enrollmentCheckRequest.setFailure3DSecureUrl(baseUrl + "/card_payments/yandex_failure_3d");
 
 		for(int index = 0, attempt = 1; index < totalGateways; index ++, attempt ++) {
 			String gateway = orderedGateways.get(index);

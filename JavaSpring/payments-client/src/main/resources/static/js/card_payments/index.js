@@ -118,14 +118,15 @@
 				$("#cctype").val(ccType);
 
 				$("#pan").val(creditCardsGenerator.generate(ccType));
-				
+
 				var expirationMonth = (faker.random.number(11) + 1).toString();
 				expirationMonth = expirationMonth.length == 1 ? "0" + expirationMonth : expirationMonth;
 				$("#expiration_month").val(expirationMonth);
 				$("#expiration_year").val(faker.random.number(12) + 2018);
-				
+
 				$("#cvv2").val(
 						(faker.random.number() + 100).toString().substr(0, 3));
+
 				$("#issuer_bank").val(faker.company.companyName() + " Bank");
 				
 				var htmlText = "<tr><td>1"
@@ -313,10 +314,6 @@
 									.removeClass("disabled").trigger("click");
 								
 								$("#threed-frame").prop("src", enrollmentCheckResponse.RedirectUrl);
-								$("#threed-frame").on("load", function (evt) {
-									console.log("Load event after redirection to 3DS",
-											this.contentWindow.location.href);
-								})
 							} else if (enrollmentCheckResponse && enrollmentCheckResponse.AcsUri) {
 								var enrollmentCheckResponse = JSON.parse(lastAction.responsePayload);
 								console.log(enrollmentCheckResponse);
@@ -324,11 +321,19 @@
 									$(".card-link[data-card=threed-secure-card]")
 										.removeClass("disabled").trigger("click");
 									
-									$("#threed-frame").prop("src", enrollmentCheckResponse.AcsUri);
-									$("#threed-frame").on("load", function (evt) {
-										console.log("Load event after redirection to 3DS",
-												this.contentWindow.location.href);
-									})
+									var appendOrNewQueryString = /\?/gi.test(enrollmentCheckResponse.AcsUri)
+										? "&" : "?";
+									
+									var termUrl = document.location.origin + "/card_payments/return_from_3d";
+									
+									var redirectUrl = enrollmentCheckResponse.AcsUri 
+										+ appendOrNewQueryString + "PaReq=" + encodeURIComponent(enrollmentCheckResponse.PaReq) 
+										+ "&MD=" + encodeURIComponent(enrollmentCheckResponse.Md || "")
+										+ "&TermUrl=" + encodeURIComponent(termUrl);
+									
+									console.log(redirectUrl);
+									
+									$("#threed-frame").prop("src", redirectUrl);
 								}
 							}
 						} 
