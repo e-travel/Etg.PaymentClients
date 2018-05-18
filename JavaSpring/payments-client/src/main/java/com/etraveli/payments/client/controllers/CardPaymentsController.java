@@ -3,6 +3,7 @@ package com.etraveli.payments.client.controllers;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
@@ -22,8 +23,8 @@ public class CardPaymentsController {
 		return new ModelAndView("card_payments/yandex_failure_3d");
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, path = "/card_payments/return_from_3d", name = "return_from_3d")
-	public ModelAndView return_from_3d() {
+	@RequestMapping(method = RequestMethod.POST, path = "/card_payments/return_from_3d", name = "return_from_3d")
+	public ModelAndView return_from_3d(@RequestParam String paRes) {
 		return new ModelAndView("card_payments/return_from_3d");
 	}
 }

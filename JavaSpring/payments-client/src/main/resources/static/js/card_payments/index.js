@@ -328,7 +328,7 @@
 						var html = "<div style='display: none;'>" 								 
 							+ "<form action='" + enrollmentCheckResponse.AcsUri + "' method=POST target=threed_frame id=threed_form>"
 							+ "<input type=hidden name=PaReq value='" + enrollmentCheckResponse.PaReq + "' />"
-							+ "<input type=hidden name=MD value='" + enrollmentCheckResponse.Md + "' />"
+							+ "<input type=hidden name=MD value='" + (enrollmentCheckResponse.Md || "") + "' />"
 							+ "<input type=hidden name=TermUrl value='" + termUrl + "' /></form></div>";
 						
 						$("body").append(html);
