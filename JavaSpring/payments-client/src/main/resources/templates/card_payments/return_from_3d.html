@@ -1,15 +1,19 @@
 <!DOCTYPE HTML>
-<html
-	xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:th="http://www.thymeleaf.org"
 	xmlns:layout="http://www.thymeleaf.org"
- 	layout:decorate="@{/layouts/base}">
+	layout:decorate="@{/layouts/base}">
 
 <!-- Keep this empty to hide navigation -->
-<nav layout:fragment="navigation"></nav> 
-	
+<nav layout:fragment="navigation"></nav>
+
 <div class="container" layout:fragment="content">
-<h3>Terms</h3>
+	<h3>Terms</h3>
+
+	<div>
+		<h4>Returning from card authentication</h4>
+		<span th:text="${outcome}"></span>
+	</div>
 </div>
 
 <!-- Keep this empty to hide footer -->

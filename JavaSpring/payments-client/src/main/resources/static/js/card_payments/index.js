@@ -323,7 +323,14 @@
 						$(".card-link[data-card=threed-secure-card]")
 							.removeClass("disabled").trigger("click");
 
-						var termUrl = document.location.origin + "/card_payments/return_from_3d";
+						// We can use any custom parameters we want when dealing with traditional 3D, 
+						// at least with the providers we 've worked with so far. The custom parameters value
+						// is echoed back upon redirection, so we can use it to securely identify a 
+						// payment.
+						var termUrl = document.location.origin + "/card_payments/return_from_3d"
+							+ "?internal_payment_identifier=" + data.internalPaymentIdentifier;
+						
+						console.log("Term URL:", termUrl);
 						
 						var html = "<div style='display: none;'>" 								 
 							+ "<form action='" + enrollmentCheckResponse.AcsUri + "' method=POST target=threed_frame id=threed_form>"

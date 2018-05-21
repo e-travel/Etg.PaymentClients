@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PaymentResponseDto {
 	private boolean isPaymentSuccessful = false;
 	private List<PaymentResponseActionDto> paymentActions;
+	private String internalPaymentIdentifier;
 
 	public boolean isPaymentSuccessful() {
 		return isPaymentSuccessful;
@@ -36,5 +37,14 @@ public class PaymentResponseDto {
 		dto.setResponsePayload(responsePayload);
 		
 		paymentActions.add(dto);
+	}
+
+	@JsonProperty("internalPaymentIdentifier")
+	public String getInternalPaymentIdentifier() {
+		return internalPaymentIdentifier;
+	}
+
+	public void setInternalPaymentIdentifier(String internalPaymentIdentifier) {
+		this.internalPaymentIdentifier = internalPaymentIdentifier;
 	}
 }

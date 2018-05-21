@@ -22,6 +22,7 @@ import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 import com.etraveli.payments.client.dto.integration.EnrollmentCheckRequestDto;
 import com.etraveli.payments.client.factories.ChargeRequestDtoFactory;
 import com.etraveli.payments.client.factories.EnrollmentCheckRequestDtoFactory;
+import com.etraveli.payments.client.services.FileStorageService;
 import com.etraveli.payments.client.services.PaymentsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,10 +32,12 @@ public class PaymentsController {
 	private static final Logger logger = LoggerFactory.getLogger(PaymentsController.class);
 
 	private final PaymentsService paymentsService;
+	private final FileStorageService fileStorageService;
 
 	@Autowired
-	public PaymentsController(PaymentsService paymentsService) {
+	public PaymentsController(PaymentsService paymentsService, FileStorageService fileStorageService) {
 		this.paymentsService = paymentsService;
+		this.fileStorageService = fileStorageService;
 	}
 
 	@RequestMapping(path = "/api/payments/card", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
@@ -88,18 +91,25 @@ public class PaymentsController {
 		}
 	}
 
-	private void check3dEnrollment(List<String> orderedGateways, PaymentRequestDto paymentRequestDto, String clientIp,
+	private void check3dEnrollment(List<String> orderedGateways, PaymentRequestDto paymentRequest, String clientIp,
 			PaymentResponseDto paymentResponse, String baseUrl) throws JsonProcessingException {
 
-		ObjectMapper mapper = new ObjectMapper();
+		String internalPaymentIdentifier = UUID.randomUUID().toString();
+		String filename = internalPaymentIdentifier + ".json";
+		
+		paymentResponse.setInternalPaymentIdentifier(internalPaymentIdentifier);
+		fileStorageService.<PaymentRequestDto>saveData(filename, paymentRequest);
+
 		int totalGateways = orderedGateways.size();
 
 		EnrollmentCheckRequestDto enrollmentCheckRequest = EnrollmentCheckRequestDtoFactory
-				.getEnrollmentCheckRequest(paymentRequestDto);
+				.getEnrollmentCheckRequest(paymentRequest);
 
 		enrollmentCheckRequest.setClientIp(clientIp);
 		enrollmentCheckRequest.setSuccess3DSecureUrl(baseUrl + "/card_payments/yandex_success_3d");
 		enrollmentCheckRequest.setFailure3DSecureUrl(baseUrl + "/card_payments/yandex_failure_3d");
+
+		ObjectMapper mapper = new ObjectMapper();
 
 		for (int index = 0, attempt = 1; index < totalGateways; index++, attempt++) {
 			String gateway = orderedGateways.get(index);
@@ -111,7 +121,7 @@ public class PaymentsController {
 
 			enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
 			enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest);
-
+			
 			paymentResponse.addPaymentStep("Enrollment check for payment attempt: " + attempt,
 					mapper.writeValueAsString(enrollmentCheckRequest),
 					mapper.writeValueAsString(enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
