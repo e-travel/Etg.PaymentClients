@@ -11,9 +11,9 @@ import com.etraveli.payments.client.dto.IntegrationConfigDto;
 @RestController
 public class ConfigController {
 
-	@Autowired
 	private final IntegrationConfig integrationConfig;
 
+	@Autowired
 	public ConfigController(IntegrationConfig integrationConfig) {
 		this.integrationConfig = integrationConfig;
 	}

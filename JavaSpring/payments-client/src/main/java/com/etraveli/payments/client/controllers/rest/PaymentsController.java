@@ -28,65 +28,59 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 public class PaymentsController {
-	private final static Logger logger = LoggerFactory.getLogger(PaymentsController.class);
+	private static final Logger logger = LoggerFactory.getLogger(PaymentsController.class);
 
-	@Autowired
 	private final PaymentsService paymentsService;
 
+	@Autowired
 	public PaymentsController(PaymentsService paymentsService) {
 		this.paymentsService = paymentsService;
 	}
 
-	@RequestMapping(path = "/api/payments/card", method = RequestMethod.POST, 
-			produces = "application/json", consumes = "application/json")
-	public PaymentResponseDto createPayment(@RequestBody PaymentRequestDto paymentRequestDto, 
-											HttpServletRequest request) throws JsonProcessingException {
-		PaymentResponseDto paymentResponse = new PaymentResponseDto();
-		
-		logger.debug("Initiating card payment... ");
+	@RequestMapping(path = "/api/payments/card", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
+	public PaymentResponseDto createPayment(@RequestBody PaymentRequestDto paymentRequestDto,
+			HttpServletRequest request) throws JsonProcessingException {
+		PaymentResponseDto paymentResponse = new PaymentResponseDto();		
 		String clientIp = request.getRemoteAddr();
 		String baseUrl = request.getLocalName() + ":" + request.getLocalPort();
 
 		List<String> orderedGateways = paymentRequestDto.getGateways();
-		
+
 		if (paymentRequestDto.isUse3dSecure()) {
 			check3dEnrollment(orderedGateways, paymentRequestDto, clientIp, paymentResponse, baseUrl);
 		} else {
 			chargeNon3D(orderedGateways, paymentRequestDto, clientIp, paymentResponse);
 		}
-		
+
 		return paymentResponse;
 	}
 
-	private void chargeNon3D(List<String> orderedGateways, PaymentRequestDto paymentRequestDto,
-							 String clientIp, PaymentResponseDto paymentResponse) 
-										   throws JsonProcessingException {
-		
+	private void chargeNon3D(List<String> orderedGateways, PaymentRequestDto paymentRequestDto, String clientIp,
+			PaymentResponseDto paymentResponse) throws JsonProcessingException {
+
 		ObjectMapper mapper = new ObjectMapper();
 		int totalGateways = orderedGateways.size();
 
 		ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequestDto);
 		chargeRequest.setClientIp(clientIp);
 
-		for(int index = 0, attempt = 1; index < totalGateways; index ++, attempt ++) {
+		for (int index = 0, attempt = 1; index < totalGateways; index++, attempt++) {
 			String gateway = orderedGateways.get(index);
-			
-			logger.info("Attempting to charge with " + gateway + " (attempt: " + attempt + " / " + totalGateways + ")");
+
+			logger.info("Attempting to charge with {}  (attempt: {} / {})",  gateway, attempt, totalGateways);
 			chargeRequest.setGateway(gateway);
 			chargeRequest.setAuthenticationMode(AuthenticationModes.AuthenticationNotApplicable);
 			chargeRequest.setClientRequestId(UUID.randomUUID().toString());
-			
+
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);
-			
-			paymentResponse.addPaymentStep("Charge for payment attempt: " + attempt, 
-				mapper.writeValueAsString(chargeRequest), 
-				mapper.writeValueAsString(
-						chargeResponseWrapper.isSuccessStatusCodeReceived()
+
+			paymentResponse.addPaymentStep("Charge for payment attempt: " + attempt,
+					mapper.writeValueAsString(chargeRequest),
+					mapper.writeValueAsString(chargeResponseWrapper.isSuccessStatusCodeReceived()
 							? chargeResponseWrapper.getChargeResponse()
-							: chargeResponseWrapper.getErrorContent()), 
-				chargeResponseWrapper.isSuccessStatusCodeReceived() 
-					? "Success" : "Failure");
-			
+							: chargeResponseWrapper.getErrorContent()),
+					chargeResponseWrapper.isSuccessStatusCodeReceived() ? "Success" : "Failure");
+
 			if (chargeResponseWrapper.getChargeResponse().isPaymentSucceded()) {
 				paymentResponse.setPaymentSuccessful(true);
 				break;
@@ -94,42 +88,39 @@ public class PaymentsController {
 		}
 	}
 
-	private void check3dEnrollment(List<String> orderedGateways, PaymentRequestDto paymentRequestDto,
-								   String clientIp, PaymentResponseDto paymentResponse, String baseUrl) 
-													   throws JsonProcessingException {
-		
+	private void check3dEnrollment(List<String> orderedGateways, PaymentRequestDto paymentRequestDto, String clientIp,
+			PaymentResponseDto paymentResponse, String baseUrl) throws JsonProcessingException {
+
 		ObjectMapper mapper = new ObjectMapper();
 		int totalGateways = orderedGateways.size();
-		
-		EnrollmentCheckRequestDto enrollmentCheckRequest = 
-				EnrollmentCheckRequestDtoFactory.getEnrollmentCheckRequest(paymentRequestDto);
+
+		EnrollmentCheckRequestDto enrollmentCheckRequest = EnrollmentCheckRequestDtoFactory
+				.getEnrollmentCheckRequest(paymentRequestDto);
 
 		enrollmentCheckRequest.setClientIp(clientIp);
 		enrollmentCheckRequest.setSuccess3DSecureUrl(baseUrl + "/card_payments/yandex_success_3d");
 		enrollmentCheckRequest.setFailure3DSecureUrl(baseUrl + "/card_payments/yandex_failure_3d");
 
-		for(int index = 0, attempt = 1; index < totalGateways; index ++, attempt ++) {
+		for (int index = 0, attempt = 1; index < totalGateways; index++, attempt++) {
 			String gateway = orderedGateways.get(index);
-			
+
 			EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper;
-				logger.info("Requested 3D Secure. Performing enrollment check.");
-				
-				enrollmentCheckRequest.setGateway(gateway);
-				
-				enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
-				enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest);
-				
-				paymentResponse.addPaymentStep("Enrollment check for payment attempt: " + attempt, 
-					mapper.writeValueAsString(enrollmentCheckRequest), 
-					mapper.writeValueAsString(
-							enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
-								? enrollmentCheckResponseWrapper.getEnrollmentCheckResponse()
-								: enrollmentCheckResponseWrapper.getErrorContent()), 
-					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived() 
-						? "Success" : "Failure");
-				
-				if (enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived())
-					break;
+			logger.info("Requested 3D Secure. Performing enrollment check.");
+
+			enrollmentCheckRequest.setGateway(gateway);
+
+			enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
+			enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest);
+
+			paymentResponse.addPaymentStep("Enrollment check for payment attempt: " + attempt,
+					mapper.writeValueAsString(enrollmentCheckRequest),
+					mapper.writeValueAsString(enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
+							? enrollmentCheckResponseWrapper.getEnrollmentCheckResponse()
+							: enrollmentCheckResponseWrapper.getErrorContent()),
+					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived() ? "Success" : "Failure");
+
+			if (enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived())
+				break;
 		}
 	}
 }
