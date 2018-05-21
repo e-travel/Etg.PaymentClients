@@ -19,7 +19,6 @@ import com.etraveli.payments.client.services.PaymentsService;
 @RestController
 public class GatewaysController {
 	private static final Logger logger = LoggerFactory.getLogger(GatewaysController.class);
-	private static Map<String, List<String>> gatewaysPerCurrencyCache = null;
 
 	private final PaymentsService paymentsService;
 	private final FileStorageService fileStorageService;
@@ -35,15 +34,19 @@ public class GatewaysController {
 			@RequestParam String currency, @RequestParam int amount) {
 		logger.debug("Initiating card payment... ");
 
-		fileStorageService.loadGatewaysPerCurrency();
+		Map<String,List<String>> gatewaysPerCurrency = fileStorageService.<Map<String,List<String>>>loadData("gateways_per_currency.json");
 		
-		if (gatewaysPerCurrencyCache == null)
-			gatewaysPerCurrencyCache = paymentsService.getSupportedCardGatewaysPerCurrency();
+		if (gatewaysPerCurrency == null) {
+			gatewaysPerCurrency = paymentsService.getSupportedCardGatewaysPerCurrency();
+			fileStorageService.<Map<String,List<String>>>saveData("gateways_per_currency.json", gatewaysPerCurrency);
+		}
 
-		if (!gatewaysPerCurrencyCache.containsKey(currency))
+		if (gatewaysPerCurrency == null)
+			return null;
+		if(!gatewaysPerCurrency.containsKey(currency))
 			return null;
 
-		List<String> availableGateways = gatewaysPerCurrencyCache.get(currency);
+		List<String> availableGateways = gatewaysPerCurrency.get(currency);
 
 		SimplePaymentsRoutingRequestDto simplePaymentsRoutingRequest = new SimplePaymentsRoutingRequestDto();
 
