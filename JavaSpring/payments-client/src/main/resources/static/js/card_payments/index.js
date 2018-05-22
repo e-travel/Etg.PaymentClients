@@ -225,8 +225,6 @@
 							},
 							
 							success: function (routingData) {
-								console.log("Routing success", routingData);
-								
 								var gateways =
 									routingData.simplePaymentsRoutingResponseDto.OrderedGateways;
 								
@@ -267,8 +265,6 @@
 				var paymentRequest = window.factories
 					.paymentRequestFactory(page.formDataHash, page.token, products, gateways);
 				
-				console.log("Sending payment request to back end", paymentRequest);
-				
 				$.ajax({
 					url: "/api/payments/card",
 					accept: "application/json",
@@ -281,8 +277,6 @@
 			},
 			
 			onInitialPaymentSuccess: function (data) {
-				console.log("success", data);
-				
 				$(".card-link[data-card=log-card]")
 					.removeClass("disabled").trigger("click");
 				
@@ -313,7 +307,6 @@
 				if (/^Enrollment/gi.test(lastAction.description)) {
 					var enrollmentCheckResponse = JSON.parse(lastAction.responsePayload);
 
-					console.log(enrollmentCheckResponse);
 					if (enrollmentCheckResponse && enrollmentCheckResponse.RedirectUrl) {
 						$(".card-link[data-card=threed-secure-card]")
 							.removeClass("disabled").trigger("click");
@@ -330,8 +323,6 @@
 						var termUrl = document.location.origin + "/card_payments/return_from_3d"
 							+ "?internal_payment_identifier=" + data.internalPaymentIdentifier;
 						
-						console.log("Term URL:", termUrl);
-						
 						var html = "<div style='display: none;'>" 								 
 							+ "<form action='" + enrollmentCheckResponse.AcsUri + "' method=POST target=threed_frame id=threed_form>"
 							+ "<input type=hidden name=PaReq value='" + enrollmentCheckResponse.PaReq + "' />"
@@ -346,8 +337,6 @@
 		};
 
 		$(document).on("etg:returnFrom3D", function(evt, data) {
-			console.log("Return from 3D", data);
-			
 			$(".card-link[data-card=log-card]")
 				.removeClass("disabled").trigger("click");
 		

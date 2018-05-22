@@ -28,7 +28,7 @@ public class PaymentsServiceIntegrationTests {
 	public void setUp() {
 		IntegrationConfig integrationConfig = new IntegrationConfig();
 		integrationConfig.setPaymentsApiUrl("http://localhost/payments-v1");
-		integrationConfig.setTokenizationApiUrl("http://tokenization-v2.staging.api.e-travel.gr");
+		integrationConfig.setTokenizationApiUrl("http://localhost/tokenization-v2");
 
 		this.paymentsService = new PaymentsService(new RestTemplate(), integrationConfig);
 	}

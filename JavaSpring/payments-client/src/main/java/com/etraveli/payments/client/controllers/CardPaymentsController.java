@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.etraveli.payments.client.dto.ChargeResponseWrapperDto;
-import com.etraveli.payments.client.dto.PaymentRequestDto;
 import com.etraveli.payments.client.dto.PaymentResponseDto;
 import com.etraveli.payments.client.dto.PaymentStateDto;
 import com.etraveli.payments.client.dto.integration.AuthenticationModes;

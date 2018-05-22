@@ -23,7 +23,6 @@
 		(function (window, document, $, undefined) {
 			$(function () {
 				var data = JSON.parse(/*[[${paymentResponse}]]*/ "{}");
-				console.log("Triggering return from 3D event", window.parent, data);
 				window.parent.$(window.parent.document).trigger("etg:returnFrom3D", [data]);
 			});
 		}(window, document, jQuery));
