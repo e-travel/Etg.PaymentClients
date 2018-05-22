@@ -131,6 +131,7 @@ public class PaymentsController {
 				PaymentStateDto paymentState = new PaymentStateDto();
 				paymentState.setPaymentRequest(paymentRequest);
 				paymentState.setGateway(gateway);
+				paymentState.setTransactionId(enrollmentCheckResponseWrapper.getEnrollmentCheckResponse().getTransactionId());
 				fileStorageService.<PaymentStateDto>saveData(filename, paymentState, PaymentStateDto.class);
 				break;
 			}

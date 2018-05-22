@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PaymentStateDto {
 	private PaymentRequestDto paymentRequest;
 	private String gateway;
+	private String transactionId;
 	
 	@JsonProperty("paymentRequest")
 	public PaymentRequestDto getPaymentRequest() {
@@ -20,5 +21,13 @@ public class PaymentStateDto {
 	}
 	public void setGateway(String gateway) {
 		this.gateway = gateway;
+	}
+	
+	@JsonProperty("transactionId")
+	public String getTransactionId() {
+		return transactionId;
+	}
+	public void setTransactionId(String transactionId) {
+		this.transactionId = transactionId;
 	}
 }

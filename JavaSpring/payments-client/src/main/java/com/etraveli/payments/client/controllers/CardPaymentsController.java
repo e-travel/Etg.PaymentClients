@@ -73,6 +73,7 @@ public class CardPaymentsController {
 
 			chargeRequest.setAuthenticationMode(AuthenticationModes.AuthenticationRequired);
 			chargeRequest.setGateway(paymentState.getGateway());
+			chargeRequest.setTransactionId(paymentState.getTransactionId());
 			chargeRequest.setPayload(paRes);
 			
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);
