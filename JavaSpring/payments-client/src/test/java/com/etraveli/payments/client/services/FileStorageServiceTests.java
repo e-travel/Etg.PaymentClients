@@ -47,10 +47,10 @@ public class FileStorageServiceTests {
 		paymentRequest.setToken(cardToken);
 		
 		String filename = UUID.randomUUID().toString() + ".json";
-		fileStorageService.<PaymentRequestDto>saveData(filename, paymentRequest);
+		fileStorageService.<PaymentRequestDto>saveData(filename, paymentRequest, PaymentRequestDto.class);
 		
 		PaymentRequestDto readPaymentRequest = 
-				fileStorageService.<PaymentRequestDto>loadData(filename);
+			fileStorageService.<PaymentRequestDto>loadData(filename, PaymentRequestDto.class);
 		
 		assertNotNull(readPaymentRequest);
 	}

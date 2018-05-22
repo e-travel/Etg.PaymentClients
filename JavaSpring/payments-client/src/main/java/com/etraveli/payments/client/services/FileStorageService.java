@@ -17,12 +17,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class FileStorageService {
 	private static final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
 
-	public synchronized <T extends Object> T loadData(String filename) {
+	public synchronized <T extends Object> T loadData(String filename, Class<T> dataClass) {
 		ObjectMapper mapper = new ObjectMapper();
-		TypeReference<T> typeRef = new TypeReference<T>() {
-		};
+		TypeReference<T> typeRef = new TypeReference<T>() {};
+		
 		Path dataFilePath = Paths
-				.get(System.getProperty("user.home"), "payments_client", filename).toAbsolutePath();
+			.get(System.getProperty("user.home"), "payments_client", filename)
+			.toAbsolutePath();
 
 		if (!dataFilePath.toFile().exists())
 			return null;
@@ -41,48 +42,46 @@ public class FileStorageService {
 			result = null;
 		} else {
 			try {
-				result = mapper.readValue(jsonValue, typeRef);
+				result = mapper.readValue(jsonValue, dataClass);
 			} catch (Exception e) {
 				result = null;
-				logger.error("Exception wile deserialize {} {}", dataFilePath , jsonValue);
+				logger.error("Exception wile deserializing {} {}", dataFilePath , jsonValue);
 				logger.error(e.getMessage(), e);
 			}
 		}
 		return result;
 	}
 
-	public synchronized <T extends Object> void saveData(String filename, T data) {
-		if (data == null)
-			return;
+	public synchronized <T extends Object> void saveData(String filename, T data, Class<T> dataClass) {
+		if (data == null) return;
 
+		TypeReference<T> typeRef = new TypeReference<T>() {};
 		ObjectMapper mapper = new ObjectMapper();
 		String jsonValue;
+
 		try {
-			jsonValue = mapper.writeValueAsString(data);
+			jsonValue = mapper.writerFor(dataClass).writeValueAsString(data);
 		} catch (JsonProcessingException e) {
-			logger.error("Error while serialize as json the provided {}. Error: {}", data,
-					e.getMessage());
+			logger.error("Error while serializing as json the provided {}. Error: {}", 
+				data, e.getMessage());
 			logger.error(e.getMessage(), e);
 			return;
 		}
 
 		Path dataFilePath = Paths
-				.get(System.getProperty("user.home"), "payments_client", filename).toAbsolutePath();
+			.get(System.getProperty("user.home"), "payments_client", filename)
+			.toAbsolutePath();
 
 		try {
 			if (!dataFilePath.toFile().exists()) {
-				
 				Files.createDirectories(dataFilePath.getParent());
-
 				Files.createFile(dataFilePath);
-
 			}else {
 				Files.delete(dataFilePath);
 				Files.createFile(dataFilePath);
 			}
 
 			Files.write(dataFilePath, jsonValue.getBytes());
-			
 		} catch (IOException e) {
 			logger.error("Error wile saving to path: {}", dataFilePath.toUri());
 			logger.error(e.getMessage(),e);
