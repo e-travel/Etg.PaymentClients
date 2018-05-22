@@ -98,7 +98,7 @@ public class PaymentsController {
 		String filename = internalPaymentIdentifier + ".json";
 		
 		paymentResponse.setInternalPaymentIdentifier(internalPaymentIdentifier);
-		fileStorageService.<PaymentRequestDto>saveData(filename, paymentRequest);
+		fileStorageService.<PaymentRequestDto>saveData(filename, paymentRequest, PaymentRequestDto.class);
 
 		int totalGateways = orderedGateways.size();
 

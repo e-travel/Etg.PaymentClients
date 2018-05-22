@@ -1,7 +1,6 @@
 package com.etraveli.payments.client.controllers.rest;
 
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.etraveli.payments.client.dto.GatewaysCurrenciesMappingDto;
 import com.etraveli.payments.client.dto.SimplePaymentsRoutingResponseWrapperDto;
 import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingRequestDto;
 import com.etraveli.payments.client.services.FileStorageService;
@@ -34,19 +34,19 @@ public class GatewaysController {
 			@RequestParam String currency, @RequestParam int amount) {
 		logger.debug("Initiating card payment... ");
 
-		Map<String,List<String>> gatewaysPerCurrency = fileStorageService.<Map<String,List<String>>>loadData("gateways_per_currency.json");
+		GatewaysCurrenciesMappingDto gatewaysPerCurrency = fileStorageService.<GatewaysCurrenciesMappingDto>loadData("gateways_per_currency.json",GatewaysCurrenciesMappingDto.class);
 		
 		if (gatewaysPerCurrency == null) {
 			gatewaysPerCurrency = paymentsService.getSupportedCardGatewaysPerCurrency();
-			fileStorageService.<Map<String,List<String>>>saveData("gateways_per_currency.json", gatewaysPerCurrency);
+			fileStorageService.<GatewaysCurrenciesMappingDto>saveData("gateways_per_currency.json", gatewaysPerCurrency, GatewaysCurrenciesMappingDto.class);
 		}
 
 		if (gatewaysPerCurrency == null)
 			return null;
-		if(!gatewaysPerCurrency.containsKey(currency))
+		if(!gatewaysPerCurrency.getGatewaysPerCurrency().containsKey(currency))
 			return null;
 
-		List<String> availableGateways = gatewaysPerCurrency.get(currency);
+		List<String> availableGateways = gatewaysPerCurrency.getGatewaysPerCurrency().get(currency);
 
 		SimplePaymentsRoutingRequestDto simplePaymentsRoutingRequest = new SimplePaymentsRoutingRequestDto();
 

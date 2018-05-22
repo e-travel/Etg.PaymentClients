@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,7 +64,7 @@ public class CardPaymentsController {
 		} else {
 			model.put("outcome", "Card Verification Success");
 			String filename = internalPaymentIdentifier + ".json";
-			PaymentRequestDto paymentRequest = fileStorageService.<PaymentRequestDto>loadData(filename);
+			PaymentRequestDto paymentRequest = fileStorageService.<PaymentRequestDto>loadData(filename,PaymentRequestDto.class);
 			ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequest);
 			chargeRequest.setPayload(paRes);
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);

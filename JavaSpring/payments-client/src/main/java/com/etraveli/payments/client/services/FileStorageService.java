@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
@@ -19,7 +18,6 @@ public class FileStorageService {
 
 	public synchronized <T extends Object> T loadData(String filename, Class<T> dataClass) {
 		ObjectMapper mapper = new ObjectMapper();
-		TypeReference<T> typeRef = new TypeReference<T>() {};
 		
 		Path dataFilePath = Paths
 			.get(System.getProperty("user.home"), "payments_client", filename)
@@ -54,8 +52,6 @@ public class FileStorageService {
 
 	public synchronized <T extends Object> void saveData(String filename, T data, Class<T> dataClass) {
 		if (data == null) return;
-
-		TypeReference<T> typeRef = new TypeReference<T>() {};
 		ObjectMapper mapper = new ObjectMapper();
 		String jsonValue;
 

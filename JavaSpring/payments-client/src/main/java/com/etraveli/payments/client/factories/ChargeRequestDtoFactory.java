@@ -2,9 +2,13 @@ package com.etraveli.payments.client.factories;
 
 import com.etraveli.payments.client.dto.PaymentRequestDto;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
-import com.etraveli.payments.client.dto.integration.EnrollmentCheckRequestDto;
 
 public final class ChargeRequestDtoFactory {
+	
+	private ChargeRequestDtoFactory() {
+		
+	}
+	
 	public static ChargeRequestDto getChargeRequest(PaymentRequestDto paymentRequest) {
 		ChargeRequestDto chargeRequest = new ChargeRequestDto();
 		

@@ -20,6 +20,7 @@ import com.etraveli.payments.client.config.IntegrationConfig;
 import com.etraveli.payments.client.dto.AvailableGatewaysResponseWrapperDto;
 import com.etraveli.payments.client.dto.ChargeResponseWrapperDto;
 import com.etraveli.payments.client.dto.EnrollmentCheckResponseWrapperDto;
+import com.etraveli.payments.client.dto.GatewaysCurrenciesMappingDto;
 import com.etraveli.payments.client.dto.SimplePaymentsRoutingResponseWrapperDto;
 import com.etraveli.payments.client.dto.SupportedCurrenciesResponseWrapperDto;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
@@ -102,12 +103,12 @@ public class PaymentsService {
 		return response;
 	}
 
-	public Map<String, List<String>> getSupportedCardGatewaysPerCurrency() {
-		Map<String, List<String>> result = new HashMap<>();
+	public GatewaysCurrenciesMappingDto getSupportedCardGatewaysPerCurrency() {
+		Map<String, List<String>> gatewaysPerCurrencyMapping = new HashMap<>();
 		AvailableGatewaysResponseWrapperDto availableGatewaysResponseWrapperDto = getAvailableGatewaysForCardPayments();
 
 		if (!availableGatewaysResponseWrapperDto.isSuccessStatusCodeReceived())
-			return new HashMap<>();
+			return new GatewaysCurrenciesMappingDto();
 
 		availableGatewaysResponseWrapperDto.getAvailableGateways().stream().forEach(gateway -> {
 			SupportedCurrenciesResponseWrapperDto supportedCurrenciesResponseWrapperDto = getSupportedCurrenciesForGateay(
@@ -118,19 +119,19 @@ public class PaymentsService {
 					&& !supportedCurrenciesResponseWrapperDto.getSupportedCurrencies().isEmpty()) {
 
 				supportedCurrenciesResponseWrapperDto.getSupportedCurrencies().stream().forEach(currency -> {
-					if (result.containsKey(currency)) {
-						result.get(currency).add(gateway);
+					if (gatewaysPerCurrencyMapping.containsKey(currency)) {
+						gatewaysPerCurrencyMapping.get(currency).add(gateway);
 						return;
 					}
 
 					List<String> gateways = new ArrayList<>(6);
 					gateways.add(gateway);
-					result.put(currency, gateways);
+					gatewaysPerCurrencyMapping.put(currency, gateways);
 				});
 			}
 		});
 
-		return result;
+		return new GatewaysCurrenciesMappingDto(gatewaysPerCurrencyMapping);
 	}
 
 	public ChargeResponseWrapperDto performCharge(ChargeRequestDto chargeRequest) {
