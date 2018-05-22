@@ -12,7 +12,7 @@ public abstract class ResponseWrapperDto {
 		this.successStatusCodeReceived = successStatusCodeReceived;
 	}
 
-	@JsonProperty("")
+	@JsonProperty("isSuccessStatusCodeReceived")
 	public final boolean isSuccessStatusCodeReceived() {
 		return successStatusCodeReceived;
 	}

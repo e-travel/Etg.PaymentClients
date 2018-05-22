@@ -17,6 +17,7 @@ import com.etraveli.payments.client.dto.ChargeResponseWrapperDto;
 import com.etraveli.payments.client.dto.EnrollmentCheckResponseWrapperDto;
 import com.etraveli.payments.client.dto.PaymentRequestDto;
 import com.etraveli.payments.client.dto.PaymentResponseDto;
+import com.etraveli.payments.client.dto.PaymentStateDto;
 import com.etraveli.payments.client.dto.integration.AuthenticationModes;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 import com.etraveli.payments.client.dto.integration.EnrollmentCheckRequestDto;
@@ -79,9 +80,9 @@ public class PaymentsController {
 
 			paymentResponse.addPaymentStep("Charge for payment attempt: " + attempt,
 					mapper.writeValueAsString(chargeRequest),
-					mapper.writeValueAsString(chargeResponseWrapper.isSuccessStatusCodeReceived()
-							? chargeResponseWrapper.getChargeResponse()
-							: chargeResponseWrapper.getErrorContent()),
+					chargeResponseWrapper.isSuccessStatusCodeReceived()
+						? mapper.writeValueAsString(chargeResponseWrapper.getChargeResponse())
+						: chargeResponseWrapper.getErrorContent(),
 					chargeResponseWrapper.isSuccessStatusCodeReceived() ? "Success" : "Failure");
 
 			if (chargeResponseWrapper.getChargeResponse().isPaymentSucceded()) {
@@ -93,12 +94,6 @@ public class PaymentsController {
 
 	private void check3dEnrollment(List<String> orderedGateways, PaymentRequestDto paymentRequest, String clientIp,
 			PaymentResponseDto paymentResponse, String baseUrl) throws JsonProcessingException {
-
-		String internalPaymentIdentifier = UUID.randomUUID().toString();
-		String filename = internalPaymentIdentifier + ".json";
-		
-		paymentResponse.setInternalPaymentIdentifier(internalPaymentIdentifier);
-		fileStorageService.<PaymentRequestDto>saveData(filename, paymentRequest, PaymentRequestDto.class);
 
 		int totalGateways = orderedGateways.size();
 
@@ -124,13 +119,21 @@ public class PaymentsController {
 			
 			paymentResponse.addPaymentStep("Enrollment check for payment attempt: " + attempt,
 					mapper.writeValueAsString(enrollmentCheckRequest),
-					mapper.writeValueAsString(enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
-							? enrollmentCheckResponseWrapper.getEnrollmentCheckResponse()
-							: enrollmentCheckResponseWrapper.getErrorContent()),
+					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
+						? mapper.writeValueAsString(enrollmentCheckResponseWrapper.getEnrollmentCheckResponse())
+						: enrollmentCheckResponseWrapper.getErrorContent(),
 					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived() ? "Success" : "Failure");
 
-			if (enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived())
+			if (enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()) {
+				String internalPaymentIdentifier = UUID.randomUUID().toString();
+				String filename = internalPaymentIdentifier + ".json";
+				paymentResponse.setInternalPaymentIdentifier(internalPaymentIdentifier);
+				PaymentStateDto paymentState = new PaymentStateDto();
+				paymentState.setPaymentRequest(paymentRequest);
+				paymentState.setGateway(gateway);
+				fileStorageService.<PaymentStateDto>saveData(filename, paymentState, PaymentStateDto.class);
 				break;
+			}
 		}
 	}
 }

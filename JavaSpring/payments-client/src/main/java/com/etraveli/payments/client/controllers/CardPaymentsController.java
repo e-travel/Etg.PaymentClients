@@ -15,6 +15,8 @@ import org.springframework.web.servlet.ModelAndView;
 import com.etraveli.payments.client.dto.ChargeResponseWrapperDto;
 import com.etraveli.payments.client.dto.PaymentRequestDto;
 import com.etraveli.payments.client.dto.PaymentResponseDto;
+import com.etraveli.payments.client.dto.PaymentStateDto;
+import com.etraveli.payments.client.dto.integration.AuthenticationModes;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 import com.etraveli.payments.client.factories.ChargeRequestDtoFactory;
 import com.etraveli.payments.client.services.FileStorageService;
@@ -63,19 +65,26 @@ public class CardPaymentsController {
 			model.put("paymentResponse", "{}");
 		} else {
 			model.put("outcome", "Card Verification Success");
+			
 			String filename = internalPaymentIdentifier + ".json";
-			PaymentRequestDto paymentRequest = fileStorageService.<PaymentRequestDto>loadData(filename,PaymentRequestDto.class);
-			ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequest);
+			PaymentStateDto paymentState = fileStorageService.<PaymentStateDto>loadData(filename,PaymentStateDto.class);
+			
+			ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentState.getPaymentRequest());
+
+			chargeRequest.setAuthenticationMode(AuthenticationModes.AuthenticationRequired);
+			chargeRequest.setGateway(paymentState.getGateway());
 			chargeRequest.setPayload(paRes);
+			
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);
 			ObjectMapper mapper = new ObjectMapper();
+			
 			PaymentResponseDto paymentResponse = new PaymentResponseDto();
 			
 			paymentResponse.addPaymentStep("Card verification result",
 					mapper.writeValueAsString(chargeRequest),
-					mapper.writeValueAsString(chargeResponseWrapper.isSuccessStatusCodeReceived()
-							? chargeResponseWrapper.getChargeResponse()
-							: chargeResponseWrapper.getErrorContent()),
+					chargeResponseWrapper.isSuccessStatusCodeReceived() 
+						? mapper.writeValueAsString(chargeResponseWrapper.getChargeResponse())
+						: chargeResponseWrapper.getErrorContent(),
 					chargeResponseWrapper.isSuccessStatusCodeReceived() ? "Success" : "Failure");
 			
 			model.put("paymentResponse", mapper.writeValueAsString(paymentResponse));

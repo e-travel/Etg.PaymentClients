@@ -2,6 +2,15 @@
 	$(function() {
 
 		var page = {
+			paymentActionTemplate: '<div class="container"><h5>Step ##index## - ##description## '
+				+ '<span class="badge badge-##outcome_label##">##outcome##</span></h5>'
+				+ '<h6><a href=#request_##index## data-toggle=collapse>Request</a></h6>'
+				+ '<pre class=collapse id=request_##index##><code class="json request-text">'
+				+ '##request_content##</code></pre>'
+				+ '<h6><a href=#response_##index## data-toggle=collapse>Response</a></h6>'
+				+ '<pre class=collapse id=response_##index##><code class="json response-text">'
+				+ '##response_content##</code></pre></div>',
+				
 			initialize : function() {
 				$(".card-content:not(#payment-form-card)").hide();
 				$(".card-link[data-card=threed-secure-card]").hide();
@@ -277,20 +286,11 @@
 				$(".card-link[data-card=log-card]")
 					.removeClass("disabled").trigger("click");
 				
-				var template = '<div class="container"><h5>Step ##index## - ##description## '
-					+ '<span class="badge badge-##outcome_label##">##outcome##</span></h5>'
-					+ '<h6><a href=#request_##index## data-toggle=collapse>Request</a></h6>'
-					+ '<pre class=collapse id=request_##index##><code class="json request-text">'
-					+ '##request_content##</code></pre>'
-					+ '<h6><a href=#response_##index## data-toggle=collapse>Response</a></h6>'
-					+ '<pre class=collapse id=response_##index##><code class="json response-text">'
-					+ '##response_content##</code></pre></div>';
-
 				var html = "";
 				
 				for(var i = 0; i < data.paymentActions.length; i ++) {
 					var paymentAction = data.paymentActions[i];
-					html += template
+					html += page.paymentActionTemplate
 						.replace(/##index##/gi, i + 1)
 						.replace(/##description##/gi, paymentAction.description)
 						.replace(/##outcome_label##/gi, paymentAction.outcome === "Success"
@@ -345,7 +345,39 @@
 			}
 		};
 
-		$(window).on("etr:configurationLoaded", function() {
+		$(document).on("etg:returnFrom3D", function(evt, data) {
+			console.log("Return from 3D", data);
+			
+			$(".card-link[data-card=log-card]")
+				.removeClass("disabled").trigger("click");
+		
+			var offset = 0;
+			$("#log-card [id^=request_]").each(function(idx, obj) { offset ++; });
+			
+			var html = "";
+			
+			for(var i = 0; i < data.paymentActions.length; i ++) {
+				var paymentAction = data.paymentActions[i];
+				html += page.paymentActionTemplate
+					.replace(/##index##/gi, offset + i + 1)
+					.replace(/##description##/gi, paymentAction.description)
+					.replace(/##outcome_label##/gi, paymentAction.outcome === "Success"
+						? "success" : "danger")
+					.replace(/##outcome##/gi, paymentAction.outcome === "Success"
+						? "Call succeeded" : "Call failed")
+					.replace(/##request_content##/gi, 
+						JSON.stringify(JSON.parse(paymentAction.requestPayload), null, '\t'))
+					.replace(/##response_content##/gi, 
+						JSON.stringify(JSON.parse(paymentAction.responsePayload), null, '\t'));
+			}
+			
+			$('#log-card').append($(html));
+			
+			$('.request-text,.response-text')
+				.each(function(i, block) { hljs.highlightBlock(block); });
+		});
+
+		$(window).on("etg:configurationLoaded", function() {
 			page.initialize();
 		});
 
