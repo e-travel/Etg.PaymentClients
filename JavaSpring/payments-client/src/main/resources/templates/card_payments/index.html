@@ -2,29 +2,8 @@
 <html
 	xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:th="http://www.thymeleaf.org"
-	xmlns:layout="http://www.thymeleaf.org"
- 	layout:decorate="@{layouts/base}">
-
-<nav layout:fragment="navigation"
-	class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-	<a class="navbar-brand" href="#">Payments tool</a>
-	<button class="navbar-toggler" type="button" data-toggle="collapse"
-		data-target="#navbarsExampleDefault"
-		aria-controls="navbarsExampleDefault" aria-expanded="false"
-		aria-label="Toggle navigation">
-		<span class="navbar-toggler-icon"></span>
-	</button>
-
-	<div class="collapse navbar-collapse" id="navbarsExampleDefault">
-		<ul class="navbar-nav mr-auto">
-			<li class="nav-item active"><a class="nav-link" href="#">Card
-					payments <span class="sr-only">(current)</span>
-			</a></li>
-			<li class="nav-item"><a class="nav-link" href="#">Alternative
-					payments</a></li>
-		</ul>
-	</div>
-</nav>
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+ 	layout:decorate="~{layouts/base}">
 
 <div class="container" layout:fragment="content">
 	<h1 class="mt-5">Credit Card Payment Flow</h1>
@@ -33,23 +12,23 @@
 		<div class="card-header">
 			<ul class="nav nav-tabs card-header-tabs">
 				<li class="nav-item"><a class="nav-link card-link active"
-					href="#" data-card="card1"> 1: Payment Form</a></li>
+					href="#" data-card="payment-form-card"> 1: Payment Form</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="card2"> 2: Create a Token</a></li>
+					href="#" data-card="token-card"> 2: Tokenization &amp; Routing</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="card3"> 3: Send to back-end</a></li>
+					href="#" data-card="threed-secure-card"> 3: 3D Secure Redirect</a></li>
 				<li class="nav-item"><a class="nav-link card-link disabled"
-					href="#" data-card="card4"> 4: 3D Secure Redirect</a></li>
+					href="#" data-card="log-card"> *: Log</a></li>
 			</ul>
 		</div>
+		
 		<div class="card-body p-4 text-left">
-			<div class="card-content" th:insert="card_payments/form" id="card1"></div>
-			<div class="card-content" id="card2">
+			<div class="card-content" th:insert="card_payments/form" id="payment-form-card"></div>
+			<div class="card-content" id="token-card">
 				<div class="row">
 					<div class="col-sm-12">
-						<h4>URL</h4>
-						<code>POST {tokenization_service_url}/card_token</code>
-						<p />
+						<h4>Tokenization</h4>
+						<hr />
 					</div>
 				</div>
 				<div class="row">
@@ -70,6 +49,16 @@
 						</pre>
 					</div>
 				</div>
+				<div class="row">
+					<div class="col-sm-12">
+						<h4>Routing</h4> 
+						<hr />
+					</div>
+					<div class="col-sm-6">
+						This gateway order was decided by payment routing. Feel free to change it by dragging and dropping items.
+					</div>
+					<div class="col-sm-6 routing-container"></div>
+				</div>
 				<div class="container">
 					<hr />
 				</div>
@@ -80,36 +69,12 @@
 					</div>
 				</div>
 			</div>
-			<div class="card-content" id="card3">
-				<div class="row">
-					<div class="col-sm-12"> 
-						<h4>URL</h4>
-						<code>POST {payments_service_url}/credit_card_payments/charges</code>
-						<p />
-					</div>
-				</div>
-				
+			<div class="card-content" id="log-card"></div>
+			<div class="card-content" id="threed-secure-card">
 				<div class="container">
-					<h3>Charge Request</h3>
-					<pre>
-						<code class="json formatted-code-block"
-							id="payment_request_text">
-						</code>
-					</pre>
+					<iframe src="" id="threed-frame" name="threed_frame"></iframe>
 				</div>
-				
-				<div class="row">
-					<div class="col-sm-8" id="payment_attempts_header">
-						<h4>Payment Attempts</h4>
-						<hr />
-					</div>
-					<div class="col-sm-4" id="attempted_gateways_header">
-						<h4>Attempted Gateways</h4>
-						<hr />
-					</div>
-				</div>
-			</div>
-			<div class="card-content" id="card4">Card Content 4</div>		
+			</div>		
 		</div>
 	</div>
 </div>
@@ -136,4 +101,6 @@
 		th:src="@{/js/factories/tokenizationRequestFactory.js}"></script>
 	<script type="text/javascript"
 		th:src="@{/js/factories/paymentRequestFactory.js}"></script>
+	<script type="text/javascript"
+		th:src="@{/js/vendor/jquery.sortable.min.js}"></script>
 </div>

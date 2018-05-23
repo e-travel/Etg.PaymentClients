@@ -2,46 +2,104 @@
 	$(function() {
 
 		var page = {
+			paymentActionTemplate: '<div class="container"><h5>Step ##index## - ##description## '
+				+ '<span class="badge badge-##outcome_label##">##outcome##</span></h5>'
+				+ '<h6><a href=#request_##index## data-toggle=collapse>Request</a></h6>'
+				+ '<pre class=collapse id=request_##index##><code class="json request-text">'
+				+ '##request_content##</code></pre>'
+				+ '<h6><a href=#response_##index## data-toggle=collapse>Response</a></h6>'
+				+ '<pre class=collapse id=response_##index##><code class="json response-text">'
+				+ '##response_content##</code></pre></div>',
+				
 			initialize : function() {
-				$(".card-content:not(#card1)").hide();
-				$(".card-link[data-card=card4]").hide();
+				$(".card-content:not(#payment-form-card)").hide();
+				$(".card-link[data-card=threed-secure-card]").hide();
+				
 				this.addEventListeners();
 			},
 
 			addEventListeners : function() {
 				$(".card-link").on("click", this.onCardLinkClick);
-				$("#payments_creation_form").on("submit",
-						this.onPaymentFormSubmit);
-				$("#generate_fake_data").on("click",
-						this.onGenerateFakeDataClick);
-				$("#proceed_to_payment").on("click",
-						this.onProceedToPaymentClick);
-				$("#authenticationMode").on("change",
-						this.onAuthenticationModeChange);
+				
+				$("#payments_creation_form")
+					.on("submit", this.onPaymentFormSubmit);
+				
+				$("#payments_creation_form")
+					.on("reset", this.onPaymentFormReset);
+				
+				$("#generate_fake_data")
+					.on("click", this.onGenerateFakeDataClick);
+				
+				$("#proceed_to_payment")
+					.on("click", this.onProceedToPaymentClick);
+				
+				$("#use_3d_secure")
+					.on("click", this.onUse3dSecureClick);
+				
+				$("#product_creation_add")
+					.on("click", this.onProductCreationAddClick);
+				
+				$("#products_table tbody")
+					.on("click", "tr .product-creation-delete", 
+						this.onProductCreationDeleteClick);
+				
+				$("#products_table tbody")
+					.on("mouseover", "tr", this.onProductsTableRowOver);
+				
+				$("#products_table tbody")
+					.on("mouseout", this.onProductsTableOut);
 			},
 			
-			onAuthenticationModeChange: function (evt) {
+			onProductsTableOut: function (evt) {
+				$("#products_table .product-creation-delete").hide();
+			},
+			
+			onProductsTableRowOver: function (evt) {
+				$("#products_table .product-creation-delete").hide();
+				$(this).find(".product-creation-delete").show();
+			},
+			
+			onProductCreationDeleteClick: function (evt) {
+				$(this).parents("tr").remove();
+			},
+			
+			onProductCreationAddClick: function (evt) {
+				var rows = $("#products_table > tbody > tr").length;
+				
+				var htmlText = "<tr><td>" + rows 
+							 + "</td><td class='product-type'>" + $("#product_creation_type").val() 
+							 + "</td><td class='product-id'>" + $("#product_creation_id").val()
+							 + "</td><td><input type=button class='btn btn-danger btn-block "
+							 + "product-creation-delete btn-sm' value='Delete Item' /></td></tr>";
+				
+				$(htmlText).insertAfter("#product_creation_row");
+				
+				$("#product_creation_type").val("");
+				$("#product_creation_id").val("");
+				$("#products_table .product-creation-delete").hide();
+			},
+			
+			onUse3dSecureClick: function (evt) {
 				var $this = $(this);
 				
-				if ($this.val() == "AuthenticationNotApplicable") {
-					$(".card-link[data-card=card4]").hide();
+				if ($this.is(":checked")) {
+					$(".card-link[data-card=threed-secure-card]").show();
 				} else {
-					$(".card-link[data-card=card4]").show();
+					$(".card-link[data-card=threed-secure-card]").hide();
 				}
 			},
 
 			onGenerateFakeDataClick: function(evt) {
 				var $form = $("#payments_creation_form");
 
-				$("#merchantref").val(
-						"Flights_"
-								+ faker.internet.color().substr(1)
-										.toUpperCase() + "_Ticket_");
+				$("#merchantref").val("Flights_"
+					+ faker.internet.color().substr(1).toUpperCase() 
+					+ "_Ticket_");
 
 				$("#orderid").val(UUIDv4Generator.generate());
 
-				var brands = [ "pamediakopes.gr", "avion.ro", "mytrip.com",
-						"trip.ru" ];
+				var brands = ["pamediakopes.gr", "avion.ro", 
+							  "mytrip.com", "trip.ru"];
 
 				$("#brand").val(brands[faker.random.number(3)]);
 				$("#country").val(faker.address.countryCode());
@@ -49,7 +107,7 @@
 				$("#amount").val(10000 + faker.random.number(10000));
 
 				var currencies = [ "AED", "ALL", "AUD", "BGN", "BRL", "CAD",
-						"CHF", "CNY", "CZK", "DKK", "EGP", "EUR", "GBP", "HKD",
+						"CHF", "CNY", "CZK", "DKK", "EGP", "EUR", "GBP", "HKD", 
 						"HRK", "HUF", "IDR", "ILS", "INR", "JPY", "KRW", "KWD",
 						"KZT", "MXN", "MYR", "NOK", "NZD", "PHP", "PLN", "RON",
 						"RSD", "RUB", "SAR", "SEK", "SGD", "THB", "TRY", "TWD",
@@ -69,15 +127,30 @@
 				$("#cctype").val(ccType);
 
 				$("#pan").val(creditCardsGenerator.generate(ccType));
-				
+
 				var expirationMonth = (faker.random.number(11) + 1).toString();
 				expirationMonth = expirationMonth.length == 1 ? "0" + expirationMonth : expirationMonth;
 				$("#expiration_month").val(expirationMonth);
 				$("#expiration_year").val(faker.random.number(12) + 2018);
-				
+
 				$("#cvv2").val(
 						(faker.random.number() + 100).toString().substr(0, 3));
+
 				$("#issuer_bank").val(faker.company.companyName() + " Bank");
+				
+				var htmlText = "<tr><td>1"
+							 + "</td><td class='product-type'>Flights"  
+							 + "</td><td class='product-id'>" + UUIDv4Generator.generate()
+							 + "</td><td><input type=button class='btn btn-danger btn-block "
+							 + "product-creation-delete btn-sm' value='Delete Item' /></td></tr>";
+	
+				$("#products_table tr").each(function (idx, obj) {
+					if ($(this).is("#product_creation_row")) return;
+					$(this).remove();
+				});
+				
+				$(htmlText).insertAfter("#product_creation_row");
+				$("#products_table .product-creation-delete").hide();
 			},
 
 			onCardLinkClick: function(evt) {
@@ -91,6 +164,13 @@
 				$targetCard.fadeIn();
 			},
 
+			onPaymentFormReset: function (evt) {
+				$("#products_table tr").each(function (idx, obj) {
+					if ($(this).is("#product_creation_row")) return;
+					$(this).remove();
+				});
+			},
+			
 			onPaymentFormSubmit: function(evt) {
 				evt.preventDefault();
 
@@ -115,12 +195,13 @@
 					accept: "application/json",
 					contentType: "application/json",
 					data: JSON.stringify(tokenizationRequest),
+					
 					success: function(data) {
 						page.token = data;
 						
 						$form.find(":input").prop("disabled", true);
 						
-						$(".card-link[data-card=card2]")
+						$(".card-link[data-card=token-card]")
 							.removeClass("disabled").trigger("click");
 						
 						$("#tokenization_request_text")
@@ -131,20 +212,58 @@
 
 						$('#tokenization_request_text, #tokenization_response_text')
 							.each(function(i, block) { hljs.highlightBlock(block); });
+						
+						$.ajax({
+							url: "/api/gateways/simple_routing",
+							accept: "application/json",
+							contentType: "application/json",
+							method: "GET",
+							data: {
+								bin: data.Metadata.Bin,
+								currency: page.formDataHash.currency,
+								amount: page.formDataHash.amount
+							},
+							
+							success: function (routingData) {
+								var gateways =
+									routingData.simplePaymentsRoutingResponseDto.OrderedGateways;
+								
+								$(".routing-container").append("<ol class='sortable'><li>" + 
+										gateways.reduce(function (acc, obj) { 
+											return acc + "</li><li>" + obj;
+										}));
+								
+								$(".sortable").sortable();
+							}
+						});
 					},
+					
 					error : function() {
 						$form.find(":input").prop("disabled", false);
-						$(".card-link[data-card=card2]").addClass("disabled");
-						$(".card-link[data-card=card1]").trigger("click");
+						$(".card-link[data-card=token-card]").addClass("disabled");
+						$(".card-link[data-card=payment-form-card]").trigger("click");
 					}
 				});
 			},
 			
 			onProceedToPaymentClick: function (evt) {
-				var paymentRequest = window.factories
-					.paymentRequestFactory(page.formDataHash, page.token);
+				var products = [], gateways = [];
 				
-				console.log("Sending payment request to back end", paymentRequest);
+				$("#products_table tr").each(function (idx, obj) {
+					if ($(obj).find(".product-type").length == 0) return;
+					
+					products.push({
+						type: $(obj).find(".product-type").text(), 
+						id: $(obj).find(".product-id").text()
+					});
+				});
+				
+				$("ol.sortable li").each(function (idx, obj) {
+					gateways.push($(obj).text());
+				});
+				
+				var paymentRequest = window.factories
+					.paymentRequestFactory(page.formDataHash, page.token, products, gateways);
 				
 				$.ajax({
 					url: "/api/payments/card",
@@ -152,53 +271,102 @@
 					contentType: "application/json",
 					method: "POST",
 					data: JSON.stringify(paymentRequest),
-					success: function (data) {
-						console.log("success", data);
-						
-						$(".card-link[data-card=card3]")
+					
+					success: page.onInitialPaymentSuccess,
+				});
+			},
+			
+			onInitialPaymentSuccess: function (data) {
+				$(".card-link[data-card=log-card]")
+					.removeClass("disabled").trigger("click");
+				
+				var html = "";
+				
+				for(var i = 0; i < data.paymentActions.length; i ++) {
+					var paymentAction = data.paymentActions[i];
+					html += page.paymentActionTemplate
+						.replace(/##index##/gi, i + 1)
+						.replace(/##description##/gi, paymentAction.description)
+						.replace(/##outcome_label##/gi, paymentAction.outcome === "Success"
+							? "success" : "danger")
+						.replace(/##outcome##/gi, paymentAction.outcome === "Success"
+							? "Call succeeded" : "Call failed")
+						.replace(/##request_content##/gi, 
+							JSON.stringify(JSON.parse(paymentAction.requestPayload), null, '\t'))
+						.replace(/##response_content##/gi, 
+							JSON.stringify(JSON.parse(paymentAction.responsePayload), null, '\t'));
+				}
+				
+				$('#log-card').append($(html));
+
+				$('.request-text,.response-text')
+					.each(function(i, block) { hljs.highlightBlock(block); });
+
+				var lastAction = data.paymentActions[data.paymentActions.length - 1];
+				
+				if (/^Enrollment/gi.test(lastAction.description)) {
+					var enrollmentCheckResponse = JSON.parse(lastAction.responsePayload);
+
+					if (enrollmentCheckResponse && enrollmentCheckResponse.RedirectUrl) {
+						$(".card-link[data-card=threed-secure-card]")
 							.removeClass("disabled").trigger("click");
 						
-						$("#payment_request_text")
-							.html(JSON.stringify(data.chargeRequest, null, "\t"));
-						
-						var template = '<div class="container"><h5>Charge Attempt ##index##: ##gateway## '
-							+ '<span class="badge badge-##outcome_label##">##outcome##</span></h5><pre>'
-							+ '<code class="json formatted-code-block payment-response-text" '
-							+ 'id="payment_response_text_##index##">##content##</code></pre></div>';
+						$("#threed_frame").prop("src", enrollmentCheckResponse.RedirectUrl);
+					} else if (enrollmentCheckResponse && enrollmentCheckResponse.AcsUri) {
+						$(".card-link[data-card=threed-secure-card]")
+							.removeClass("disabled").trigger("click");
 
-						var html = "";
+						// We can use any custom parameters we want when dealing with traditional 3D, 
+						// at least with the providers we 've worked with so far. The custom parameters value
+						// is echoed back upon redirection, so we can use it to securely identify a 
+						// payment.
+						var termUrl = document.location.origin + "/card_payments/return_from_3d"
+							+ "?internal_payment_identifier=" + data.internalPaymentIdentifier;
 						
-						for(var i = 0; i < data.chargeAttempts.length; i ++) {
-							var attempt = data.chargeAttempts[i];
-							html += template
-								.replace(/##index##/gi, i + 1)
-								.replace(/##gateway##/gi, data.attemptedGateways[i])
-								.replace(/##outcome_label##/gi, attempt.chargeResponse.PaymentSucceeded
-									? "success" : "danger")
-								.replace(/##outcome##/gi, attempt.chargeResponse.PaymentSucceeded 
-									? "Success" : "Failure")
-								.replace(/##content##/gi, attempt.successStatusCodeReceived
-										? JSON.stringify(attempt.chargeResponse, null, "\t")
-										: JSON.stringify(attempt.errorContent, null, "\t"));
-						}
+						var html = "<div style='display: none;'>" 								 
+							+ "<form action='" + enrollmentCheckResponse.AcsUri + "' method=POST target=threed_frame id=threed_form>"
+							+ "<input type=hidden name=PaReq value='" + enrollmentCheckResponse.PaReq + "' />"
+							+ "<input type=hidden name=MD value='" + (enrollmentCheckResponse.Md || "") + "' />"
+							+ "<input type=hidden name=TermUrl value='" + termUrl + "' /></form></div>";
 						
-						$("#payment_attempts_header").append(html);
-						$("#attempted_gateways_header").append("<ol>"
-							+ data.attemptedGateways
-								.map(function (obj) { return "<li>" + obj + "</li>" })
-								.reduce(function (acc, obj) { return acc + obj })
-							+ "</ol>");
-						
-						$('#payment_request_text, .payment-response-text')
-							.each(function(i, block) { hljs.highlightBlock(block); });
-						
-						$('#proceed_to_payment').prop('disabled', true);
+						$("body").append(html);
+						$("#threed_form").submit();
 					}
-				});
+				} 
 			}
 		};
 
-		$(window).on("etr:configurationLoaded", function() {
+		$(document).on("etg:returnFrom3D", function(evt, data) {
+			$(".card-link[data-card=log-card]")
+				.removeClass("disabled").trigger("click");
+		
+			var offset = 0;
+			$("#log-card [id^=request_]").each(function(idx, obj) { offset ++; });
+			
+			var html = "";
+			
+			for(var i = 0; i < data.paymentActions.length; i ++) {
+				var paymentAction = data.paymentActions[i];
+				html += page.paymentActionTemplate
+					.replace(/##index##/gi, offset + i + 1)
+					.replace(/##description##/gi, paymentAction.description)
+					.replace(/##outcome_label##/gi, paymentAction.outcome === "Success"
+						? "success" : "danger")
+					.replace(/##outcome##/gi, paymentAction.outcome === "Success"
+						? "Call succeeded" : "Call failed")
+					.replace(/##request_content##/gi, 
+						JSON.stringify(JSON.parse(paymentAction.requestPayload), null, '\t'))
+					.replace(/##response_content##/gi, 
+						JSON.stringify(JSON.parse(paymentAction.responsePayload), null, '\t'));
+			}
+			
+			$('#log-card').append($(html));
+			
+			$('.request-text,.response-text')
+				.each(function(i, block) { hljs.highlightBlock(block); });
+		});
+
+		$(window).on("etg:configurationLoaded", function() {
 			page.initialize();
 		});
 

@@ -1,8 +1,8 @@
 (function (window, document, undefined) {
 	window.factories = window.factories || {};
 	window.factories.paymentRequestFactory = window.factories.paymentRequestFactory
-			|| function(paymentFormData, token) {
-				console.log("Payment Request Factory", paymentFormData);
+			|| function(paymentFormData, token, products, gateways) {
+				console.log("Payment Request Factory", paymentFormData, products);
 		
 				return {
 					token: token,
@@ -14,7 +14,24 @@
 					language: paymentFormData.language,
 					merchantReference: paymentFormData.merchantref,
 					orderId: paymentFormData.orderid,
-					email: paymentFormData.email
+					email: paymentFormData.email,
+					gateways: gateways,
+					use3dSecure: paymentFormData.use_3d_secure === "true",
+					productMetadata: {
+						CardToken: token.Token,
+						Products: products.map(function (obj) {
+							return {
+								ProductId: obj.id,
+								ProductType: obj.type
+							};
+						}),
+						LocalizationSettings: {
+							Brand: paymentFormData.brand,
+							Country: paymentFormData.country,
+							Currency: paymentFormData.currency,
+							Language: paymentFormData.language
+						}
+					}
 				};
 			}
 })(window, document);

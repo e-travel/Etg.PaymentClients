@@ -1,8 +1,7 @@
 package com.etraveli.payments.client.controllers.rest;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,87 +17,124 @@ import com.etraveli.payments.client.dto.ChargeResponseWrapperDto;
 import com.etraveli.payments.client.dto.EnrollmentCheckResponseWrapperDto;
 import com.etraveli.payments.client.dto.PaymentRequestDto;
 import com.etraveli.payments.client.dto.PaymentResponseDto;
+import com.etraveli.payments.client.dto.PaymentStateDto;
 import com.etraveli.payments.client.dto.integration.AuthenticationModes;
 import com.etraveli.payments.client.dto.integration.ChargeRequestDto;
 import com.etraveli.payments.client.dto.integration.EnrollmentCheckRequestDto;
-import com.etraveli.payments.client.dto.integration.EnrollmentCheckResponseDto;
-import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingRequestDto;
-import com.etraveli.payments.client.dto.integration.SimplePaymentsRoutingResponseDto;
 import com.etraveli.payments.client.factories.ChargeRequestDtoFactory;
+import com.etraveli.payments.client.factories.EnrollmentCheckRequestDtoFactory;
+import com.etraveli.payments.client.services.FileStorageService;
 import com.etraveli.payments.client.services.PaymentsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 public class PaymentsController {
-	private final static Logger logger = LoggerFactory.getLogger(PaymentsController.class);
-	private static Map<String, List<String>> gatewaysPerCurrencyCache = null;
+	private static final Logger logger = LoggerFactory.getLogger(PaymentsController.class);
+
+	private final PaymentsService paymentsService;
+	private final FileStorageService fileStorageService;
 
 	@Autowired
-	private final PaymentsService paymentsService;
-
-	public PaymentsController(PaymentsService paymentsService) {
+	public PaymentsController(PaymentsService paymentsService, FileStorageService fileStorageService) {
 		this.paymentsService = paymentsService;
+		this.fileStorageService = fileStorageService;
 	}
 
-	@RequestMapping(path = "/api/payments/card", method = RequestMethod.POST, 
-			produces = "application/json", consumes = "application/json")
-	public PaymentResponseDto createPayment(@RequestBody PaymentRequestDto paymentRequestDto, HttpServletRequest request) {
-		logger.debug("Initiating card payment... ");
-		
-		// Payments initialization
-		if(gatewaysPerCurrencyCache == null)
-			gatewaysPerCurrencyCache = paymentsService.getSupportedCardGatewaysPerCurrency();
-		
-		if(!gatewaysPerCurrencyCache.containsKey(paymentRequestDto.getCurrency()))
-			//TODO log error and/or throw exception
-			return null;
-		
-		// Payments routing
-		List<String> availableGateways = gatewaysPerCurrencyCache.get(paymentRequestDto.getCurrency());
-		
-		SimplePaymentsRoutingRequestDto simplePaymentsRoutingRequest = new SimplePaymentsRoutingRequestDto();
-		
-		simplePaymentsRoutingRequest.setBin(paymentRequestDto.getToken().getMetadata().getBin());
-		simplePaymentsRoutingRequest.setCurrency(paymentRequestDto.getCurrency());
-		simplePaymentsRoutingRequest.setPreferredGateways(availableGateways);
-		simplePaymentsRoutingRequest.setTransactionValue(paymentRequestDto.getAmount());
-		
-		SimplePaymentsRoutingResponseDto simplePaymentsRoutingResponseDto = paymentsService
-				.performSimpleRouting(simplePaymentsRoutingRequest) 
-				.getSimplePaymentsRoutingResponseDto();
-		
-		ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequestDto);
-		chargeRequest.setClientIp(request.getRemoteAddr());
-		
-		PaymentResponseDto paymentResponse = new PaymentResponseDto();
-		paymentResponse.setChargeRequest(chargeRequest);
+	@RequestMapping(path = "/api/payments/card", method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
+	public PaymentResponseDto createPayment(@RequestBody PaymentRequestDto paymentRequestDto,
+			HttpServletRequest request) throws JsonProcessingException {
+		PaymentResponseDto paymentResponse = new PaymentResponseDto();		
+		String clientIp = request.getRemoteAddr();
+		String baseUrl = request.getLocalName() + ":" + request.getLocalPort();
 
-		List<String> orderedGateways = simplePaymentsRoutingResponseDto.getOrderedGateways();
-		
+		List<String> orderedGateways = paymentRequestDto.getGateways();
+
+		if (paymentRequestDto.isUse3dSecure()) {
+			check3dEnrollment(orderedGateways, paymentRequestDto, clientIp, paymentResponse, baseUrl);
+		} else {
+			chargeNon3D(orderedGateways, paymentRequestDto, clientIp, paymentResponse);
+		}
+
+		return paymentResponse;
+	}
+
+	private void chargeNon3D(List<String> orderedGateways, PaymentRequestDto paymentRequestDto, String clientIp,
+			PaymentResponseDto paymentResponse) throws JsonProcessingException {
+
+		ObjectMapper mapper = new ObjectMapper();
 		int totalGateways = orderedGateways.size();
-		for(int index = 0; index < totalGateways; index ++) {
+
+		ChargeRequestDto chargeRequest = ChargeRequestDtoFactory.getChargeRequest(paymentRequestDto);
+		chargeRequest.setClientIp(clientIp);
+
+		for (int index = 0, attempt = 1; index < totalGateways; index++, attempt++) {
 			String gateway = orderedGateways.get(index);
-			
-			if (paymentRequestDto.getAuthenticationMode() != AuthenticationModes.AuthenticationNotApplicable) {
-				EnrollmentCheckRequestDto enrollmentCheckRequest = new EnrollmentCheckRequestDto();
-				// TODO: Construct enrollment check request here.
-				
-				EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest); 
-			}
-			
-			logger.info("Attempting to charge with " + gateway + " (attempt: " + index + " / " + totalGateways + ")");
+
+			logger.info("Attempting to charge with {}  (attempt: {} / {})",  gateway, attempt, totalGateways);
 			chargeRequest.setGateway(gateway);
-			
+			chargeRequest.setAuthenticationMode(AuthenticationModes.AuthenticationNotApplicable);
+			chargeRequest.setClientRequestId(UUID.randomUUID().toString());
+
 			ChargeResponseWrapperDto chargeResponseWrapper = paymentsService.performCharge(chargeRequest);
-			
-			paymentResponse.getChargeAttempts().add(chargeResponseWrapper);
-			paymentResponse.getAttemptedGateways().add(gateway);
-			
+
+			paymentResponse.addPaymentStep("Charge for payment attempt: " + attempt,
+					mapper.writeValueAsString(chargeRequest),
+					chargeResponseWrapper.isSuccessStatusCodeReceived()
+						? mapper.writeValueAsString(chargeResponseWrapper.getChargeResponse())
+						: chargeResponseWrapper.getErrorContent(),
+					chargeResponseWrapper.isSuccessStatusCodeReceived() ? "Success" : "Failure");
+
 			if (chargeResponseWrapper.getChargeResponse().isPaymentSucceded()) {
 				paymentResponse.setPaymentSuccessful(true);
 				break;
 			}
 		}
-		
-		return paymentResponse;
+	}
+
+	private void check3dEnrollment(List<String> orderedGateways, PaymentRequestDto paymentRequest, String clientIp,
+			PaymentResponseDto paymentResponse, String baseUrl) throws JsonProcessingException {
+
+		int totalGateways = orderedGateways.size();
+
+		EnrollmentCheckRequestDto enrollmentCheckRequest = EnrollmentCheckRequestDtoFactory
+				.getEnrollmentCheckRequest(paymentRequest);
+
+		enrollmentCheckRequest.setClientIp(clientIp);
+		enrollmentCheckRequest.setSuccess3DSecureUrl(baseUrl + "/card_payments/yandex_success_3d");
+		enrollmentCheckRequest.setFailure3DSecureUrl(baseUrl + "/card_payments/yandex_failure_3d");
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		for (int index = 0, attempt = 1; index < totalGateways; index++, attempt++) {
+			String gateway = orderedGateways.get(index);
+
+			EnrollmentCheckResponseWrapperDto enrollmentCheckResponseWrapper;
+			logger.info("Requested 3D Secure. Performing enrollment check.");
+
+			enrollmentCheckRequest.setGateway(gateway);
+
+			enrollmentCheckRequest.setClientRequestId(UUID.randomUUID().toString());
+			enrollmentCheckResponseWrapper = paymentsService.performEnrollmentCheck(enrollmentCheckRequest);
+			
+			paymentResponse.addPaymentStep("Enrollment check for payment attempt: " + attempt,
+					mapper.writeValueAsString(enrollmentCheckRequest),
+					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()
+						? mapper.writeValueAsString(enrollmentCheckResponseWrapper.getEnrollmentCheckResponse())
+						: enrollmentCheckResponseWrapper.getErrorContent(),
+					enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived() ? "Success" : "Failure");
+
+			if (enrollmentCheckResponseWrapper.isSuccessStatusCodeReceived()) {
+				String internalPaymentIdentifier = UUID.randomUUID().toString();
+				String filename = internalPaymentIdentifier + ".json";
+				paymentResponse.setInternalPaymentIdentifier(internalPaymentIdentifier);
+				PaymentStateDto paymentState = new PaymentStateDto();
+				paymentState.setPaymentRequest(paymentRequest);
+				paymentState.setGateway(gateway);
+				paymentState.setTransactionId(enrollmentCheckResponseWrapper.getEnrollmentCheckResponse().getTransactionId());
+				fileStorageService.<PaymentStateDto>saveData(filename, paymentState, PaymentStateDto.class);
+				break;
+			}
+		}
 	}
 }

@@ -45,3 +45,18 @@ code {
 .formatted-code-block {
 	height: 300px;
 }
+
+#threed-frame {
+	width: 100%;
+	height: 600px;
+	border: none;
+}
+
+ol.sortable {
+    border: 1px solid #6cf;
+    padding: 10px 30px;
+}
+
+ol.sortable > li {
+	cursor: pointer;
+}

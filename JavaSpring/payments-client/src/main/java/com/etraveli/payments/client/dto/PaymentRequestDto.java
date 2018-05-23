@@ -1,6 +1,9 @@
 package com.etraveli.payments.client.dto;
 
+import java.util.List;
+
 import com.etraveli.payments.client.dto.integration.CardTokenResponseDto;
+import com.etraveli.payments.client.dto.integration.ProductMetadataDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PaymentRequestDto {
@@ -13,8 +16,10 @@ public class PaymentRequestDto {
 	private String orderId;
 	private String country;
 	private String email;
-	private String AuthenticationMode;
+	private boolean use3dSecure;
 	private CardTokenResponseDto token;
+	private ProductMetadataDto productMetadata;
+	private List<String> gateways;
 
 	@JsonProperty("amount")
 	public int getAmount() {
@@ -66,9 +71,19 @@ public class PaymentRequestDto {
 		return email;
 	}
 
-	@JsonProperty("authenticationMode")
-	public String getAuthenticationMode() {
-		return AuthenticationMode;
+	@JsonProperty("use3dSecure")
+	public boolean isUse3dSecure() {
+		return use3dSecure;
+	}
+
+	@JsonProperty("productMetadata")
+	public ProductMetadataDto getProductMetadata() {
+		return productMetadata;
+	}
+
+	@JsonProperty("gateways")
+	public List<String> getGateways() {
+		return gateways;
 	}
 
 	public void setAmount(int amount) {
@@ -111,7 +126,15 @@ public class PaymentRequestDto {
 		this.email = email;
 	}
 
-	public void setAuthenticationMode(String authenticationMode) {
-		AuthenticationMode = authenticationMode;
+	public void setUse3dSecure(boolean use3dSecure) {
+		this.use3dSecure = use3dSecure;
+	}
+
+	public void setProductMetadata(ProductMetadataDto productMetadata) {
+		this.productMetadata = productMetadata;
+	}
+
+	public void setGateways(List<String> gateways) {
+		this.gateways = gateways;
 	}
 }

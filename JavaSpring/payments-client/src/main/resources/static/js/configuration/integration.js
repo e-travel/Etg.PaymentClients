@@ -7,7 +7,7 @@
 			success: function (data) {
 				window.configuration = window.configuration || {};
 				window.configuration.integration = window.configuration.integration || data; 
-				$(window).trigger("etr:configurationLoaded");
+				$(window).trigger("etg:configurationLoaded");
 			}
 		});
 		
